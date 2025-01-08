@@ -6,4 +6,4 @@ google
 pandas
 streamlit
 python-dotenv
-face_recognition @ git + https://github.com/praykar/face_recognition
+face_recognition @ git+https://github.com/praykar/face_recognition
