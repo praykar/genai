@@ -1,0 +1,14 @@
+channels:
+     - conda-forge
+ dependencies:
+     - dlib
+     - numpy
+     - scipy
+     - opencv
+     - face_recognition
+     - Pillow
+     - transformers
+     - torch
+     - huggingface_hub
+     - pandas
+     - python-dotenv
