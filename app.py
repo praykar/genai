@@ -328,18 +328,18 @@ if __name__ == "__main__":
         if age and gender and profession and location and product:
             st.write(f"🔄 {stages[0]}")
             img = save_genimage(product,age,location,income,gender,profession)
-            img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
+            #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
             # img = Image.open("imageout\\output_image.png")
             st.write(f"🔄 {stages[1]}")
             banner_output_path = "banner.png"
             banner = create_banner(height = int(img.height * 0.08), width = int(img.width))
             # banner = create_banner()
-            banner.save(banner_output_path)
+            #banner.save(banner_output_path)
             print(f"Banner saved as {banner_output_path}")
             st.write(f"🔄 {stages[2]}")
             image = apply_tagline_and_logo(img, banner_output_path, "logo.png", logo_position="top_right")
             output_path = f"final_output\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-            image.save(output_path)
+            #image.save(output_path)
             print(f"Image saved as {output_path}")
             st.success("All done!")
             st.image(image, caption=f"{product} loan::{age}-year-old {gender} {profession} professional in {location}", use_container_width=True)
@@ -369,21 +369,21 @@ if __name__ == "__main__":
                         img = save_genimage(
                             row['Product'], row['age'], row['location'], row['balance'], row['gender'], row['job'],  
                         )
-                        img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
+                        #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
 
                         # Create and save the banner
                         st.write(f"🔄 {stages[1]}")
                         banner_output_path = "banner.png"
                         banner = create_banner(height = int(img.height * 0.08), width = int(img.width))
                         # banner = create_banner()
-                        banner.save(banner_output_path)
+                        #banner.save(banner_output_path)
                         print(f"Banner saved as {banner_output_path}")
                         st.write(f"🔄 {stages[2]}")
                         image = apply_tagline_and_logo(img, banner_output_path, "logo.png", logo_position="top_right")
                         output_path = f"final_output\\output_image_{idx}_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
                         st.success("All done!")
                         st.image(image, caption=f"{row['Product']} loan::{row['age']}-year-old {row['gender']} {row['job']} professional in {row['location']}", use_container_width =True)
-                        image.save(output_path)
+                        #image.save(output_path)
                         print(f"Image saved as {output_path}")
                 else:
                     st.error(f"CSV must contain columns: {', '.join(required_columns)}")
