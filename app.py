@@ -2,6 +2,7 @@ from gettext import install
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 from datetime import datetime
+!pip install face_recognition
 import face_recognition
 import regex as re
 from huggingface_hub import InferenceClient
