@@ -1,0 +1,9 @@
+Pillow
+transformers
+torch
+huggingface_hub
+google
+pandas
+streamlit
+python-dotenv
+face_recognition
