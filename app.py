@@ -123,7 +123,7 @@ def detect_faces(image):
         Returns:
             list: List of dictionaries containing face coordinates
         """
-        model="cnn"
+        model="hog"
         # Detect faces
         face_locations = face_recognition.face_locations(image, model=model)
         
