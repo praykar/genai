@@ -367,7 +367,7 @@ if __name__ == "__main__":
                         stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
                         st.write(f"🔄 {stages[0]}")
                         img = save_genimage(
-                            row['Product'], row['age'], row['location'], row['balance'], row['gender'], row['job'],  
+                            row['Product'], row['age'], row['location'], 0, row['gender'], row['job'],  
                         )
                         #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
 
