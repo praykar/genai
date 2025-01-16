@@ -395,7 +395,7 @@ if __name__ == "__main__":
                          st.image(image, caption=f"{row['Product']} loan::{row['age']}-year-old {row['gender']} {row['job']} professional in {row['location']}", use_container_width =True)
                          #image.save(output_path)
                          #print(f"Image saved as {output_path}")
-                      st.success("All done!")
+                     st.success("All done!")
                  else:
                      st.error(f"CSV must contain columns: {', '.join(required_columns)}")
          except Exception as e:
