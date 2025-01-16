@@ -7,7 +7,7 @@ import regex as re
 from huggingface_hub import InferenceClient
 import numpy as np
 import pandas as pd
-import time
+import time, asyncio
 import random
 import streamlit as st
 
@@ -157,7 +157,15 @@ def save_genimage(product, age, location, income, gender, profession):
     # output is a PIL.Image object
     client = InferenceClient("black-forest-labs/FLUX.1-dev", token=KEY)
     try:
-        image = client.text_to_image(system_prompt)
+     while True:
+            for secs in range(0, 1000, 1):
+                mm, ss = secs // 60, secs % 60
+                st.write("Time Lapsed", f"{mm:02d}:{ss:02d}")
+                r = await asyncio.sleep(1)
+            image = client.text_to_image(system_prompt)
+            if image:
+                break
+        
     except Exception as e:
             raise st.error(f"Error Generating Image: {str(e)}")
             #raise RuntimeError(f"Error adding image: {str(e)}")
