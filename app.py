@@ -352,8 +352,8 @@ if __name__ == "__main__":
              output_path = f"final_output\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
              #image.save(output_path)
              print(f"Image saved as {output_path}")
-             st.success("All done!")
              st.image(image, caption=f"{product} loan::{age}-year-old {gender} {profession} professional in {location}", use_container_width=True)
+             st.success("All done!")
          else:
              st.error("Please fill all fields to generate an image.")
   
@@ -392,10 +392,10 @@ if __name__ == "__main__":
                          st.write(f"🔄 {stages[2]}")
                          image = apply_tagline_and_logo(img, banner_output_path, uploaded_logo, logo_position="top_right")
                          output_path = f"final_output\\output_image_{idx}_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-                         st.success("All done!")
                          st.image(image, caption=f"{row['Product']} loan::{row['age']}-year-old {row['gender']} {row['job']} professional in {row['location']}", use_container_width =True)
                          #image.save(output_path)
-                         print(f"Image saved as {output_path}")
+                         #print(f"Image saved as {output_path}")
+                      st.success("All done!")
                  else:
                      st.error(f"CSV must contain columns: {', '.join(required_columns)}")
          except Exception as e:
