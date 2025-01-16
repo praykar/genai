@@ -140,7 +140,7 @@ def detect_faces(image):
         
         return faces
  
-async def save_genimage(product, age, location, income, gender, profession):
+def save_genimage(product, age, location, income, gender, profession):
     """Create and save the banner"""
  
     if product == 'jewel':
@@ -157,14 +157,7 @@ async def save_genimage(product, age, location, income, gender, profession):
     # output is a PIL.Image object
     client = InferenceClient("black-forest-labs/FLUX.1-dev", token=KEY)
     try:
-     while True:
-            for secs in range(0, 1000, 1):
-                mm, ss = secs // 60, secs % 60
-                st.write("Time Lapsed", f"{mm:02d}:{ss:02d}")
-                r = await asyncio.sleep(1)
-            image = client.text_to_image(system_prompt)
-            if image:
-                break
+       image = client.text_to_image(system_prompt)
         
     except Exception as e:
             raise st.error(f"Error Generating Image: {str(e)}")
