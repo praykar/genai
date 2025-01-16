@@ -316,13 +316,7 @@ if __name__ == "__main__":
  
     # Streamlit App
     st.title("Dynamic Image Generation App")
- 
-    # Define session state variables
-    if 'start_time' not in st.session_state:
-       st.session_state.start_time = None
-       st.session_state.elapsed_time = 0.0
-       st.session_state.is_waiting = False
-     
+  
     # Logo Upload Section
     st.header("Upload Logo in PNG")
     uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
@@ -336,28 +330,39 @@ if __name__ == "__main__":
      location = st.text_input("Location")
      product = st.text_input("Product")
      income=0
+     
+     # Define session state variables
+     if 'start_time' not in st.session_state:
+         st.session_state.start_time = None
+         st.session_state.is_waiting = False
+     
+     # Timer display placeholder
+     elapsed_time_placeholder = st.empty()
      if st.button("Generate Image"):
-         
+      
          # Simulate a process with different stages
          stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
          
          # Start the timer when the request button is clicked
          if not st.session_state.is_waiting:
              st.session_state.is_waiting = True
-             st.session_state.start_time = time.time()
-             st.session_state.elapsed_time = 0.0
+             st.session_state.start_time = time.time()  # Record the start time
       
          if age and gender and profession and location and product:
              st.write(f"🔄 {stages[0]}")
              # If waiting for a response, update the elapsed time
              if st.session_state.is_waiting:
-                 elapsed = time.time() - st.session_state.start_time
-                 st.session_state.elapsed_time = elapsed
-                 st.write(f"Time elapsed: {elapsed:.2f} seconds")
+                 while True:
+                     elapsed = time.time() - st.session_state.start_time  # Calculate elapsed time
+                     elapsed_time_placeholder.text(f"Time elapsed: {elapsed:.2f} seconds")
+                     time.sleep(0.1)  # Update every 100ms (to make it feel like a real-time timer)
              
-                 # Simulate the server response (after some delay)
-                 img = save_genimage(product,age,location,income,gender,profession)
-                 st.session_state.is_waiting = False  # Set waiting state to False after request is complete
+                     # Simulate the server response (after some delay)
+                     if elapsed >= random.uniform(2, 5):  # Once the simulated delay passes
+                        img = save_genimage(product,age,location,income,gender,profession)
+                        st.session_state.is_waiting = False  # Set waiting state to False
+                        elapsed_time_placeholder.text(f"Server response received in {elapsed:.2f} seconds")
+                        break  # Exit the loop once the response is received
              
              #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
              # img = Image.open("imageout\\output_image.png")
