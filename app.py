@@ -312,80 +312,86 @@ if __name__ == "__main__":
     # Streamlit App
     st.title("Dynamic Image Generation App")
  
-    # Input Section
-    st.header("Generate Image Based on Inputs")
-    age = st.text_input("Age")
-    gender = st.text_input("Gender")
-    profession = st.text_input("Profession")
-    location = st.text_input("Location")
-    product = st.text_input("Product")
-    income=0
-    if st.button("Generate Image"):
-        
-        # Simulate a process with different stages
-        stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
-        
-        if age and gender and profession and location and product:
-            st.write(f"🔄 {stages[0]}")
-            img = save_genimage(product,age,location,income,gender,profession)
-            #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
-            # img = Image.open("imageout\\output_image.png")
-            st.write(f"🔄 {stages[1]}")
-            banner_output_path = "banner.png"
-            banner = create_banner(height = int(img.height * 0.08), width = int(img.width))
-            # banner = create_banner()
-            #banner.save(banner_output_path)
-            print(f"Banner saved as {banner_output_path}")
-            st.write(f"🔄 {stages[2]}")
-            image = apply_tagline_and_logo(img, banner_output_path, "logo.png", logo_position="top_right")
-            output_path = f"final_output\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-            #image.save(output_path)
-            print(f"Image saved as {output_path}")
-            st.success("All done!")
-            st.image(image, caption=f"{product} loan::{age}-year-old {gender} {profession} professional in {location}", use_container_width=True)
-        else:
-            st.error("Please fill all fields to generate an image.")
- 
-   
-    # CSV Upload Section
-    st.header("Generate Images from CSV")
-    uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
- 
-    if uploaded_file:
-        try:
-            data = pd.read_csv(uploaded_file)
-            if st.button("Generate Images from CSV"):
-                # Ensure required columns are present
-                required_columns = ['age', 'gender', 'job', 'location', 'Product']
-                if all(col in data.columns for col in required_columns):
-                    # Pick 5 random rows
-                    sampled_data = data.sample(5)
-                    st.write("Uploaded CSV Data Preview:")
-                    st.write(sampled_data.head(5))
-                    for idx, row in sampled_data.iterrows():
-                        # Simulate a process with different stages
-                        stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
-                        st.write(f"🔄 {stages[0]}")
-                        img = save_genimage(
-                            row['Product'], row['age'], row['location'], 0, row['gender'], row['job'],  
-                        )
-                        #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
+    
+    # Logo Upload Section
+    st.header("Upload Logo in PNG")
+    uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
 
-                        # Create and save the banner
-                        st.write(f"🔄 {stages[1]}")
-                        banner_output_path = "banner.png"
-                        banner = create_banner(height = int(img.height * 0.08), width = int(img.width))
-                        # banner = create_banner()
-                        #banner.save(banner_output_path)
-                        print(f"Banner saved as {banner_output_path}")
-                        st.write(f"🔄 {stages[2]}")
-                        image = apply_tagline_and_logo(img, banner_output_path, "logo.png", logo_position="top_right")
-                        output_path = f"final_output\\output_image_{idx}_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-                        st.success("All done!")
-                        st.image(image, caption=f"{row['Product']} loan::{row['age']}-year-old {row['gender']} {row['job']} professional in {row['location']}", use_container_width =True)
-                        #image.save(output_path)
-                        print(f"Image saved as {output_path}")
-                else:
-                    st.error(f"CSV must contain columns: {', '.join(required_columns)}")
-        except Exception as e:
-            st.error(f"Error reading CSV file: {e}")
+    if uploaded_logo:
+     # Input Section
+     st.header("Generate Image Based on Inputs")
+     age = st.text_input("Age")
+     gender = st.text_input("Gender")
+     profession = st.text_input("Profession")
+     location = st.text_input("Location")
+     product = st.text_input("Product")
+     income=0
+     if st.button("Generate Image"):
+         
+         # Simulate a process with different stages
+         stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
+         
+         if age and gender and profession and location and product:
+             st.write(f"🔄 {stages[0]}")
+             img = save_genimage(product,age,location,income,gender,profession)
+             #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
+             # img = Image.open("imageout\\output_image.png")
+             st.write(f"🔄 {stages[1]}")
+             banner_output_path = "banner.png"
+             banner = create_banner(height = int(img.height * 0.08), width = int(img.width))
+             # banner = create_banner()
+             #banner.save(banner_output_path)
+             print(f"Banner saved as {banner_output_path}")
+             st.write(f"🔄 {stages[2]}")
+             image = apply_tagline_and_logo(img, banner_output_path, uploaded_logo, logo_position="top_right")
+             output_path = f"final_output\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
+             #image.save(output_path)
+             print(f"Image saved as {output_path}")
+             st.success("All done!")
+             st.image(image, caption=f"{product} loan::{age}-year-old {gender} {profession} professional in {location}", use_container_width=True)
+         else:
+             st.error("Please fill all fields to generate an image.")
+  
+    
+     # CSV Upload Section
+     st.header("Generate Images from CSV")
+     uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
+  
+     if uploaded_file:
+         try:
+             data = pd.read_csv(uploaded_file)
+             if st.button("Generate Images from CSV"):
+                 # Ensure required columns are present
+                 required_columns = ['age', 'gender', 'job', 'location', 'Product']
+                 if all(col in data.columns for col in required_columns):
+                     # Pick 5 random rows
+                     sampled_data = data.sample(5)
+                     st.write("Uploaded CSV Data Preview:")
+                     st.write(sampled_data.head(5))
+                     for idx, row in sampled_data.iterrows():
+                         # Simulate a process with different stages
+                         stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
+                         st.write(f"🔄 {stages[0]}")
+                         img = save_genimage(
+                             row['Product'], row['age'], row['location'], 0, row['gender'], row['job'],  
+                         )
+                         #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
+ 
+                         # Create and save the banner
+                         st.write(f"🔄 {stages[1]}")
+                         banner_output_path = "banner.png"
+                         banner = create_banner(height = int(img.height * 0.08), width = int(img.width))
+                         # banner = create_banner()
+                         #banner.save(banner_output_path)
+                         print(f"Banner saved as {banner_output_path}")
+                         st.write(f"🔄 {stages[2]}")
+                         image = apply_tagline_and_logo(img, banner_output_path, uploaded_logo, logo_position="top_right")
+                         output_path = f"final_output\\output_image_{idx}_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
+                         st.success("All done!")
+                         st.image(image, caption=f"{row['Product']} loan::{row['age']}-year-old {row['gender']} {row['job']} professional in {row['location']}", use_container_width =True)
+                         #image.save(output_path)
+                         print(f"Image saved as {output_path}")
+                 else:
+                     st.error(f"CSV must contain columns: {', '.join(required_columns)}")
+         except Exception as e:
+             st.error(f"Error reading CSV file: {e}")
