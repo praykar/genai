@@ -163,11 +163,10 @@ def save_genimage(product, age, location, income, gender, profession):
  
     return image
  
-def apply_tagline_and_logo(image, banner_output_path, uploaded_logo, logo_position="top_left"):
+def apply_tagline_and_logo(image, banner_output_path, logo, logo_position="top_left"):
     """Applies tagline and logo to the image."""
  
     # Load and resize logo
-    logo = uploaded_logo
     logo_width = int(image.width * 0.2 * 1.5)  # 20% of image width
     logo_height = int(logo.height * (logo_width / logo.width) * 1.2)
     logo = logo.resize((logo_width, logo_height))
