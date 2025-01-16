@@ -140,7 +140,7 @@ def detect_faces(image):
         
         return faces
  
-def save_genimage(product, age, location, income, gender, profession):
+async def save_genimage(product, age, location, income, gender, profession):
     """Create and save the banner"""
  
     if product == 'jewel':
