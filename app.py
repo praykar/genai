@@ -159,7 +159,8 @@ def save_genimage(product, age, location, income, gender, profession):
     try:
         image = client.text_to_image(system_prompt)
     except Exception as e:
-            raise RuntimeError(f"Error adding image: {str(e)}")
+            raise st.error(f"Error Generating Image: {str(e)}")
+            #raise RuntimeError(f"Error adding image: {str(e)}")
  
     return image
  
