@@ -183,7 +183,7 @@ def apply_tagline_and_logo(image, banner_output_path, logo_file, logo_position="
  
  
     # Paste banner onto image
-    image.paste(logo, (int(logo_x), int(logo_y)), logo) # Use mask for transparency if logo has it
+    image.paste(logo, (0,0), logo) # Use mask for transparency if logo has it
  
     # Load and resize banner
     banner = Image.open(banner_output_path)
