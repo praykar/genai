@@ -161,6 +161,7 @@ def save_genimage(product, age, location, income, gender, profession):
         
     except Exception as e:
             raise st.error(f"Error Generating Image: {str(e)}")
+            st.session_state.is_waiting = False
             #raise RuntimeError(f"Error adding image: {str(e)}")
  
     return image
