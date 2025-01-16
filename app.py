@@ -342,7 +342,7 @@ if __name__ == "__main__":
          stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
          
          # Start the timer when the request button is clicked
-         if request_button and not st.session_state.is_waiting:
+         if not st.session_state.is_waiting:
              st.session_state.is_waiting = True
              st.session_state.start_time = time.time()
              st.session_state.elapsed_time = 0.0
