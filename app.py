@@ -317,7 +317,12 @@ if __name__ == "__main__":
     # Streamlit App
     st.title("Dynamic Image Generation App")
  
-    
+    # Define session state variables
+    if 'start_time' not in st.session_state:
+       st.session_state.start_time = None
+       st.session_state.elapsed_time = 0.0
+       st.session_state.is_waiting = False
+     
     # Logo Upload Section
     st.header("Upload Logo in PNG")
     uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
@@ -336,9 +341,24 @@ if __name__ == "__main__":
          # Simulate a process with different stages
          stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
          
+         # Start the timer when the request button is clicked
+         if request_button and not st.session_state.is_waiting:
+             st.session_state.is_waiting = True
+             st.session_state.start_time = time.time()
+             st.session_state.elapsed_time = 0.0
+      
          if age and gender and profession and location and product:
              st.write(f"🔄 {stages[0]}")
-             img = save_genimage(product,age,location,income,gender,profession)
+             # If waiting for a response, update the elapsed time
+             if st.session_state.is_waiting:
+                 elapsed = time.time() - st.session_state.start_time
+                 st.session_state.elapsed_time = elapsed
+                 st.write(f"Time elapsed: {elapsed:.2f} seconds")
+             
+                 # Simulate the server response (after some delay)
+                 img = save_genimage(product,age,location,income,gender,profession)
+                 st.session_state.is_waiting = False  # Set waiting state to False after request is complete
+             
              #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
              # img = Image.open("imageout\\output_image.png")
              st.write(f"🔄 {stages[1]}")
