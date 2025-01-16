@@ -180,10 +180,14 @@ def apply_tagline_and_logo(image, banner_output_path, logo_file, logo_position="
         logo_y = 10
     else:
         raise ValueError("Invalid logo_position. Choose 'top_left' or 'top_right'.")
- 
- 
-    # Paste banner onto image
-    image.paste(logo, (logo_x,logo_y)) # Use mask for transparency if logo has it
+    if logo.mode == 'RGBA':
+     mask = logo.split()[3]
+     rgb_logo = logo.convert('RGB')
+     image.paste(rgb_logo, (logo_x,logo_y), mask)# Use mask for transparency if logo has it
+    else:
+     rgb_logo = logo.convert('RGB')
+     # Paste banner onto image
+     image.paste(rgb_logo, (logo_x,logo_y)) 
  
     # Load and resize banner
     banner = Image.open(banner_output_path)
