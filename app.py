@@ -148,8 +148,8 @@ def save_genimage(product, age, location, income, gender, profession):
     elif product == 'personal':
         product = 'vacation'
   
-    system_prompt = f"Photo taken with an iPhone 16 Pro Max of a {age}-year-old {gender} {profession} in {location}, India. The {product} (hidden logo) is in the foreground, fully in focus beside the person.\
-  Realistic lighting, natural daylight, warm tones, and soft shadows emphasize the product’s sleek design and the subject’s professionalism. Lifestyle setting, no text, mid-shot, clean composition with cinematic framing."
+    system_prompt = f"{age}-year-old {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, sharp focus, beside person.\
+    Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
     system_prompt = system_prompt.replace('  ', ' ')
     system_prompt = system_prompt.replace('  ', ' ')
     print(system_prompt)
