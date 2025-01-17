@@ -1,0 +1,14 @@
+-- A photo taken with an iPhone 16 Pro Max showcasing a {age}-year-old {gender} {profession} professional in {location}, India. The {product} (hidden brand logo) with theme is positioned in the foreground,\
+    fully in focus, and beside the person, with no text visible in the image. Realistic lighting, high detail, sharp focus, natural background, lifestyle setting, emphasizing professionalism and the product's sleek design.
+
+--A photo taken with an iPhone 16 Pro Max showcasing a loan marketing ad featuring a {age}-year-old {gender} {profession} professional in {location}, India.\
+    The {product} (hidden brand logo) with theme is positioned in the foreground, fully in focus, and beside the person and no text visible in the image.
+
+--A high-quality photo captured with an iPhone 16 Pro Max, featuring a {age}-year-old {gender} {profession} professional in {location}, India. The {product} (hidden brand logo) with theme is placed prominently in the foreground,\
+    sharp and fully in focus, positioned beside the person. The composition is clean with a natural, professional lifestyle setting in the background, emphasizing the product's sleek design and the subject's professionalism.\
+    Realistic lighting with soft shadows, warm tones, and natural daylight enhance the mood. No text visible. Cinematic framing, mid-shot, with the subject slightly off-center for balanced composition.      #(too long)
+
+--Photo taken with an iPhone 16 Pro Max of a {age}-year-old {gender} {profession} in {location}, India. The {product} (hidden logo) is in the foreground, fully in focus beside the person.\
+  Realistic lighting, natural daylight, warm tones, and soft shadows emphasize the product’s sleek design and the subject’s professionalism. Lifestyle setting, no text, mid-shot, clean composition with cinematic framing. #(wrong output)
+
+--{age}-year-old {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing.
