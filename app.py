@@ -142,21 +142,23 @@ def detect_faces(image):
  
 def save_genimage(product, age, location, income, gender, profession):
     """Create and save the banner"""
- 
+    
     if product == 'jewel':
         product = 'jewellery'
     elif product == 'personal':
         product = 'vacation'
   
-    system_prompt = f"A photo taken with an iPhone 16 Pro Max showcasing a loan marketing ad featuring a {age}-year-old {gender} {profession} professional in {location}, India.\
-    The {product} (hidden brand logo) with theme is positioned in the foreground, fully in focus, and beside the person and no text visible in the image."
+    system_prompt = f"A photo taken with an iPhone 16 Pro Max showcasing a {age}-year-old {gender} {profession} professional in {location}, India. The {product} (hidden brand logo) with theme is positioned in the foreground,\
+    fully in focus, and beside the person, with no text visible in the image. Realistic lighting, high detail, sharp focus, natural background, lifestyle setting, emphasizing professionalism and the product's sleek design."
     system_prompt = system_prompt.replace('  ', ' ')
     system_prompt = system_prompt.replace('  ', ' ')
     print(system_prompt)
  
     # output is a PIL.Image object
     client = InferenceClient("black-forest-labs/FLUX.1-dev", token=KEY)
+ 
     try:
+      
        image = client.text_to_image(system_prompt)
         
     except Exception as e:
@@ -332,39 +334,13 @@ if __name__ == "__main__":
      product = st.text_input("Product")
      income=0
      
-     # Define session state variables
-     if 'start_time' not in st.session_state:
-         st.session_state.start_time = None
-         st.session_state.is_waiting = False
-     
-     # Timer display placeholder
-     elapsed_time_placeholder = st.empty()
      if st.button("Generate Image"):
       
          # Simulate a process with different stages
          stages = ["Generating Image...", "Creating Banner & Applying Logo...", "Placing Tagline & Finalizing results..."]
-         
-         # Start the timer when the request button is clicked
-         if not st.session_state.is_waiting:
-             st.session_state.is_waiting = True
-             st.session_state.start_time = time.time()  # Record the start time
-      
          if age and gender and profession and location and product:
              st.write(f"🔄 {stages[0]}")
-             # If waiting for a response, update the elapsed time
-             if st.session_state.is_waiting:
-                 while True:
-                     elapsed = time.time() - st.session_state.start_time  # Calculate elapsed time
-                     elapsed_time_placeholder.text(f"Time elapsed: {elapsed:.2f} seconds")
-                     time.sleep(0.1)  # Update every 100ms (to make it feel like a real-time timer)
-             
-                     # Simulate the server response (after some delay)
-                     if elapsed >= random.uniform(2, 5):  # Once the simulated delay passes
-                        img = save_genimage(product,age,location,income,gender,profession)
-                        st.session_state.is_waiting = False  # Set waiting state to False
-                        elapsed_time_placeholder.text(f"Server response received in {elapsed:.2f} seconds")
-                        break  # Exit the loop once the response is received
-             
+             img = save_genimage(product,age,location,income,gender,profession)
              #img.save(f"imageout\\output_image_data{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
              # img = Image.open("imageout\\output_image.png")
              st.write(f"🔄 {stages[1]}")
