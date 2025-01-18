@@ -368,4 +368,4 @@ if __name__ == "__main__":
                         st.image(image, caption=caption, use_container_width=True)
                     st.success("All done!")
             except Exception as e:
-                st.error(f"Error reading CSV file: {e}")
+                st.error(f"Error reading CSV file: {str(e)}")
