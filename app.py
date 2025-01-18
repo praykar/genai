@@ -12,7 +12,7 @@ import random
 import streamlit as st
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-KEY = st.secrets('HF_TOKEN') 
+KEY = st.secrets['HF_TOKEN'] 
 #client = InferenceClient(api_key=KEY)
 
 # Pre-load fonts to reuse
