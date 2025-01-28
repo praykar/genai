@@ -159,7 +159,6 @@ def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left")
     """
     """Applies tagline and logo to the image based on face locations."""
     # Load and resize the logo
-    logo = Image.open(uploaded_logo)
     logo_width = int(img.width * 0.2 * 1.5)  # 20% of image width
     logo_height = int(logo.height * (logo_width / logo.width) * 1.2)
     logo = logo.resize((logo_width, logo_height))
