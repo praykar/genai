@@ -1,20 +1,34 @@
-from gettext import install
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 import os
-from datetime import datetime
-import face_recognition
-import regex as re
-from huggingface_hub import InferenceClient
-import numpy as np
-import pandas as pd
-import time
 import random
 import streamlit as st
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
+from huggingface_hub import InferenceClient
+import pandas as pd
+import numpy as np
+import face_recognition
+import threading
+import queue
+from dataclasses import dataclass
+from enum import Enum, auto
+import time
+import io
 
-KEY = st.secrets['HF_TOKEN'] 
-#client = InferenceClient(api_key=KEY)
+KEY = st.secrets['HF_TOKEN']
+client = InferenceClient("black-forest-labs/FLUX.1-dev", token=KEY)
 
+# Define message types for queue communication
+class MessageType(Enum):
+    PROGRESS = auto()
+    IMAGE = auto()
+    ERROR = auto()
+    COMPLETE = auto()
+
+@dataclass
+class Message:
+    type: MessageType
+    data: dict
+    
 # Pre-load fonts to reuse
 def load_font(font_path, font_size):
     try:
@@ -25,7 +39,6 @@ def load_font(font_path, font_size):
     return font
 
 def create_banner(width=1200, height=120):
-    # Create a new image with transparent background
     image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
     background = Image.new('RGBA', (width, height), (242, 101, 34, 255))
@@ -33,19 +46,17 @@ def create_banner(width=1200, height=120):
 
     draw = ImageDraw.Draw(image)
     font_size = image.height * 0.25 
-
     font = load_font("Helvetica.ttc", font_size)
 
     texts = ["Low Interest Rates",'|', "Hassle Free process",'|', "Flexible tenure"]
 
-    # 1. Text Boxes at the top
     box_height = int(height * 0.4)
     box_width = int(width / len(texts))
     spacing = (width - (box_width * len(texts))) // len(texts) + 1
 
     for i, text in enumerate(texts):
         x1 = spacing + (i * (box_width + spacing))
-        y1 = int(height * 0.02) # small padding from top
+        y1 = int(height * 0.02)
 
         text_bbox = draw.textbbox((0, 0), text, font=font)
         text_width = text_bbox[2] - text_bbox[0]
@@ -53,10 +64,8 @@ def create_banner(width=1200, height=120):
         text_x = x1 + (box_width - text_width) // 2
         text_y = y1 + (box_height - text_height) // 2
 
-        # Draw text in white
-        draw.text((text_x, text_y), text, fill='white', font=font, stroke_width=0.2, stroke_fill='white') #Bold effect using stroke
+        draw.text((text_x, text_y), text, fill='white', font=font, stroke_width=0.2, stroke_fill='white')
 
-    # 2. "Follow us on" and Social Media Icons in the middle
     follow_text = "Follow us on:"
     follow_font_size = int(font_size * 0.85)
     follow_font = load_font("Helvetica.ttc", follow_font_size)
@@ -64,7 +73,6 @@ def create_banner(width=1200, height=120):
     follow_text_bbox = draw.textbbox((0, 0), follow_text, font=follow_font)
     follow_text_width = follow_text_bbox[2] - follow_text_bbox[0]
 
-    # Middle position
     icon_paths = ["facebook.png", "twitter.png", "instagram.png", "linkedin.png", "youtube.png", "whatsapp.png"]
     icons = []
     for path in icon_paths:
@@ -74,9 +82,8 @@ def create_banner(width=1200, height=120):
                 icon = icon.convert('RGBA')
             icons.append(icon)
 
-    #icon spacing      
     follow_text_x = int((width) - (follow_text_width * 2.8))
-    follow_text_y = int(height * 0.55) # Start slightly below the text boxes
+    follow_text_y = int(height * 0.55)
     icon_size = int(follow_font_size*1.2)
     icons = [icon.resize((icon_size, icon_size)) for icon in icons]
 
@@ -89,69 +96,81 @@ def create_banner(width=1200, height=120):
 
     draw.text((follow_text_x, follow_text_y), follow_text, fill='white', font=follow_font, stroke_width=0.2, stroke_fill='white')
 
-    # 3. Disclaimer at the bottom
     disclaimer_text = "This image was generated using artificial intelligence and may not depict real people, places, or events.\
     Any resemblance to actual individuals or situations is purely coincidental."
-    disclaimer_text = disclaimer_text.replace('  ', ' ')
-
     disclaimer_font_size = int(font_size * 0.6)
     disclaimer_font = load_font("Helvetica.ttc", disclaimer_font_size)
 
     disclaimer_text_bbox = draw.textbbox((0, 0), disclaimer_text, font=disclaimer_font)
     disclaimer_text_width = disclaimer_text_bbox[2] - disclaimer_text_bbox[0]
     disclaimer_text_x = (width - disclaimer_text_width) // 2
-    disclaimer_text_y = height - disclaimer_font_size - 5  # 5 pixels padding from bottom
+    disclaimer_text_y = height - disclaimer_font_size - 5
 
     draw.text((disclaimer_text_x, disclaimer_text_y), disclaimer_text, fill='white', font=disclaimer_font, stroke_width=0.4, stroke_fill='white')
 
     return image
 
-# Function to detect faces in an image and return their coordinates
 def detect_faces(image):
-    """
-    Detect faces in an image and return their coordinates.
-    """
     face_locations = face_recognition.face_locations(np.array(image), model="hog")
-    
-    # Convert to a more readable format
     faces = [{'x': left, 'y': top, 'width': right - left, 'height': bottom - top} for top, right, bottom, left in face_locations]
-    
     return faces
 
 def save_genimage(product, age, location, income, gender, profession):
-    """Create and save the banner"""
-    
-    if product == 'jewel':
-        product = 'jewellery'
-    elif product == 'personal':
+    if product.lower() == 'jewel':
+        product = 'gold jewellery'
+    elif product.lower() == 'personal':
         product = 'vacation'
-  
     system_prompt = f"{age}-year-old {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, sharp focus, beside person.\
     Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-    system_prompt = system_prompt.replace('  ', ' ')
-
-    client = InferenceClient("black-forest-labs/FLUX.1-dev", token=KEY)
- 
     try:
         image = client.text_to_image(system_prompt)
     except Exception as e:
         raise st.error(f"Error Generating Image: {str(e)}")
-    
-    return image, system_prompt
-
-# Helper function to create the banner in parallel
-def create_banner_parallel(image, width, height):
-    banner = create_banner(width=width, height=height)
-    return banner
-
-# Helper function to apply the tagline and logo in parallel
-def apply_tagline_and_logo_parallel(img, banner, uploaded_logo, logo_position="top_left"):
-    
-    # Apply tagline and logo
-    image_with_tagline_and_logo = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position)
-    return image_with_tagline_and_logo
+    caption = " ".join(system_prompt.split()[:6])
+    return image, caption
 
 def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
+    """
+    Adds a logo and a tagline to the image and the banner.
+    The logo is placed according to the `logo_position` argument.
+    The tagline is added below the image or banner if provided.
+    """
+    # Resize logo
+    logo = Image.open(uploaded_logo)
+    logo_width = int(img.width * 0.2 * 1.5)
+    logo_height = int(logo.height * (logo_width / logo.width) * 1.2)
+    logo = logo.resize((logo_width, logo_height))
+
+    # Get the image dimensions
+    img_width, img_height = img.size
+
+    # Logo placement based on position
+    if logo_position == "top_left":
+        logo_x, logo_y = 10, 10
+    elif logo_position == "top_right":
+        logo_x, logo_y = img.width - logo_width - 10, 10
+    else:
+        raise ValueError("Invalid logo_position. Choose 'top_left' or 'top_right'.")
+
+    # Place logo onto the image
+    if logo.mode == 'RGBA':
+        mask = logo.split()[3]
+        rgb_logo = logo.convert('RGB')
+        img.paste(rgb_logo, (logo_x, logo_y), mask)
+    else:
+        rgb_logo = logo.convert('RGB')
+        img.paste(rgb_logo, (logo_x, logo_y))
+
+    # Resize banner to fit the image width
+    banner_width = int(img.width)
+    banner_height = int(banner.height * (banner_width / banner.width))
+    banner = banner.resize((banner_width, banner_height))
+
+    # Create a new image with the banner added below
+    new_image = Image.new('RGB', (img.width, img.height + banner_height), color=(255, 255, 255))
+    new_image.paste(img, (0, 0))
+    new_image.paste(banner, (0, img.height))
+
     """Applies tagline and logo to the image based on face locations."""
     # Load and resize the logo
     logo = Image.open(uploaded_logo)
@@ -266,106 +285,477 @@ def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left")
         outline_color = '#f26522'
         draw.text((text_x, text_y1), tagline_line1, fill='#f26522', font=font, stroke_width=1, stroke_fill=outline_color)
         draw.text((text_x, text_y2), tagline_line2, fill='#f26522', font=font, stroke_width=1, stroke_fill=outline_color)
+
     return new_image
 
-def process_banner_and_tagline(images, uploaded_logo):
-    """Process banner creation and tagline application in parallel for a list of images."""
-    with ProcessPoolExecutor() as executor:
-        futures = []
-
-        # Parallelize banner creation for each image
-        for img in images:
-            width, height = img.size
-            futures.append(executor.submit(create_banner_parallel, img, width, int(img.height * 0.08)))
-
-        banners = [future.result() for future in as_completed(futures)]
-
-        # Now apply tagline and logo to each image in parallel
-        futures = []
-        for idx, img in enumerate(images):
-            futures.append(executor.submit(apply_tagline_and_logo_parallel, img, banners[idx], uploaded_logo, logo_position="top_right"))
-
-        # Wait for all images to finish processing
-        final_images = [future.result() for future in as_completed(futures)]
-
-    return final_images
-
-# Updating CSV processing function to integrate parallelization with face detection and banner/tagline creation
-def process_csv_data_with_parallel_banner_tagline(data, uploaded_logo):
-    """Process each row in the CSV in parallel and create images with banner and tagline."""
-    with ProcessPoolExecutor() as executor:
-        futures = []
-        for idx, row in data.iterrows():
-            futures.append(executor.submit(generate_image_for_row, row, uploaded_logo))
-        
-        results = [future.result() for future in as_completed(futures)]
-
-    return results
-
-def generate_image_for_row(row, uploaded_logo):
-    """Generate image for each row in the CSV."""
+def process_image_for_row(row, uploaded_logo):
     img, caption = save_genimage(row['Product'], row['age'], row['location'], 0, row['gender'], row['job'])
     width, height = img.size
-
-    # Create banner for the image
     banner = create_banner(width=width, height=int(img.height * 0.08))
-
-    # Apply tagline and logo to the image
     image_with_tagline_and_logo = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
     return image_with_tagline_and_logo, caption
 
-if __name__ == "__main__":
-    # Streamlit App
-    st.title("Dynamic Image Generation App")
-  
-    # Logo Upload Section
-    st.header("Upload Logo in PNG")
-    uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
-
-    if uploaded_logo:
-        # Input Section
-        st.header("Generate Image Based on Inputs")
-        age = st.text_input("Age")
-        gender = st.text_input("Gender")
-        profession = st.text_input("Profession")
-        location = st.text_input("Location")
-        product = st.text_input("Product")
-        income = 0
-     
-        if st.button("Generate Image"):
-            if age and gender and profession and location and product:
-                st.write("🔄 Generating Image...")
-                img, caption = save_genimage(product, age, location, income, gender, profession)
-                
-                st.write("🔄 Creating Banner & Applying Logo...")
-                banner = create_banner(height=int(img.height * 0.08), width=int(img.width))
-                
-                st.write("🔄 Placing Tagline & Finalizing results...")
-                image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
-                
-                st.image(image, caption=caption, use_container_width=True)
-                st.success("All done!")
+def validate_csv_data(df):
+    """Validate the CSV data format and content"""
+    required_columns = ['Product', 'age', 'gender', 'job', 'location']
+    
+    # Check if all required columns exist
+    if not all(col in df.columns for col in required_columns):
+        return False
+    
+    # Validate data types and ranges
+    try:
+        # Check age range
+        if not all(10 <= age <= 100 for age in df['age']):
+            return False
+        
+        # Check gender values
+        if not all(gender in ['male', 'female'] for gender in df['gender']):
+            return False
+        
+        # Check for empty values
+        if df[required_columns].isnull().any().any():
+            return False
+            
+        return True
+        
+    except Exception:
+        return False
+        
+def calculate_optimal_workers(total_images):
+    """
+    Calculate optimal number of workers based on number of images
+    """
+    if total_images <= 4:
+        return total_images
+    elif total_images <= 8:
+        return 4
+    elif total_images <= 16:
+        return 6
+    else:
+        return 8  # Maximum workers to avoid API rate limits
+        
+def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=None):
+    # Reset DataFrame index to ensure continuous integers starting from 0
+    data = data.reset_index(drop=True)
+    
+    # Set number of workers
+    total_rows = len(data)
+    if num_workers is None:
+        num_workers = calculate_optimal_workers(total_rows)
+    # Ensure num_workers doesn't exceed total rows
+    num_workers = min(num_workers, total_rows)
+    
+    # Create communication queue
+    message_queue = queue.Queue()
+    
+    # Create UI placeholders for progress tracking
+    progress_container = st.container()
+    with progress_container:
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        worker_info = st.empty()
+    
+    # Display worker information
+    worker_info.info(f"Processing {total_rows} images with {num_workers} parallel workers")
+    
+    # Create grid layout container
+    grid_container = st.container()
+    
+    # Configure grid layout
+    num_cols = 2  # Number of columns in the grid
+    with grid_container:
+        st.markdown("### Generated Advertisements")
+        # Calculate number of rows needed
+        num_rows = (total_rows + num_cols - 1) // num_cols
+        
+        # Create grid layout
+        image_placeholders = {}
+        for row in range(num_rows):
+            cols = st.columns(num_cols)
+            for col in range(num_cols):
+                idx = row * num_cols + col
+                if idx < total_rows:
+                    image_placeholders[idx] = cols[col]
+    
+    # Flag to track if we should stop processing
+    stop_processing = threading.Event()
+    
+    def process_single_image(index, row):
+        if stop_processing.is_set():
+            return False
+            
+        try:
+            # Generate image
+            img, caption = save_genimage(
+                row['Product'], 
+                row['age'], 
+                row['location'], 
+                0, 
+                row['gender'], 
+                row['job']
+            )
+            
+            # Create and apply banner and logo
+            banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
+            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
+            
+            # Send progress update
+            message_queue.put(Message(
+                type=MessageType.PROGRESS,
+                data={'index': index}
+            ))
+            
+            # Send image
+            message_queue.put(Message(
+                type=MessageType.IMAGE,
+                data={
+                    'index': index, 
+                    'image': final_image, 
+                    'caption': f"{row['Product']} for {row['gender']} {row['age']}-year-old {row['job']} from {row['location']}"
+                }
+            ))
+            
+            return True
+            
+        except Exception as e:
+            error_msg = str(e)
+            if "Rate limit" in error_msg or "Model is busy" in error_msg:
+                message_queue.put(Message(
+                    type=MessageType.ERROR,
+                    data={'index': index, 'error': "MODEL_BUSY"}
+                ))
+                stop_processing.set()  # Signal all threads to stop
             else:
-                st.error("Please fill all fields to generate an image.")
+                message_queue.put(Message(
+                    type=MessageType.ERROR,
+                    data={'index': index, 'error': str(e)}
+                ))
+            return False
 
-        # CSV Upload Section
-        st.header("Generate Images from CSV")
-        uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
+    # Add custom CSS for image cards
+    st.markdown("""
+        <style>
+            .stImage {
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                padding: 5px;
+            }
+            .download-button {
+                margin-top: 10px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-        if uploaded_file:
+    # Start processing in parallel
+    with ThreadPoolExecutor(max_workers=num_workers) as executor:
+        # Submit all tasks
+        futures = [
+            executor.submit(process_single_image, idx, row)
+            for idx, row in data.iterrows()
+        ]
+        
+        # Initialize tracking variables
+        completed = 0
+        displayed_images = set()
+        pending_images = {}
+        next_display_index = 0
+        
+        # Process messages from queue until all tasks are complete or stop signal
+        while (not all(future.done() for future in futures) or not message_queue.empty()) and not stop_processing.is_set():
             try:
-                data = pd.read_csv(uploaded_file, usecols=['age', 'gender', 'job', 'location', 'Product'])
-                if st.button("Generate Images from CSV"):
-                    sampled_data = data.sample(5)
-                    st.write("Uploaded CSV Data Preview:")
-                    st.write(sampled_data.head(5))
-
-                    # Parallel processing of CSV data, banner, and tagline
-                    st.write("🔄 Generating Images from CSV...")
-                    images = process_csv_data_with_parallel_banner_tagline(sampled_data, uploaded_logo)
+                message = message_queue.get(timeout=0.1)
+                
+                if message.type == MessageType.ERROR and message.data['error'] == "MODEL_BUSY":
+                    # Cancel all pending futures
+                    for future in futures:
+                        future.cancel()
                     
-                    for image, caption in images:
-                        st.image(image, caption=caption, use_container_width=True)
-                    st.success("All done!")
-            except Exception as e:
-                st.error(f"Error reading CSV file: {str(e)}")
+                    # Clean up UI elements
+                    worker_info.empty()
+                    status_text.empty()
+                    progress_bar.empty()
+                    
+                    # Show error message
+                    st.error("Model too busy for process. Please try again later.")
+                    return  # Exit the function immediately
+                    
+                elif message.type == MessageType.PROGRESS:
+                    completed += 1
+                    progress_bar.progress(completed / total_rows)
+                    status_text.text(f"Generated {completed} of {total_rows} images")
+                    
+                elif message.type == MessageType.IMAGE:
+                    index = message.data['index']
+                    final_image = message.data['image']
+                    caption = message.data['caption']
+                    
+                    # Store the image in pending_images
+                    pending_images[index] = (final_image, caption)
+                    
+                    # Display images in order
+                    while next_display_index in pending_images and next_display_index < total_rows:
+                        if next_display_index not in displayed_images:
+                            img, cap = pending_images[next_display_index]
+                            
+                            with image_placeholders[next_display_index]:
+                                st.image(img, caption=f"Image {next_display_index + 1}", use_container_width=True)
+                                st.caption(cap)
+                                
+                                # Add download button for each image
+                                buf = io.BytesIO()
+                                img.save(buf, format="PNG")
+                                byte_im = buf.getvalue()
+                                
+                                st.download_button(
+                                    label=f"Download Image {next_display_index + 1}",
+                                    data=byte_im,
+                                    file_name=f"ad_{next_display_index + 1}.png",
+                                    mime="image/png",
+                                    use_container_width=True,
+                                    key=f"download_{next_display_index}"
+                                )
+                            
+                            displayed_images.add(next_display_index)
+                        next_display_index += 1
+                
+                elif message.type == MessageType.ERROR:
+                    st.error(f"Error processing row {message.data['index'] + 1}: {message.data['error']}")
+                    
+            except queue.Empty:
+                continue
+        
+        # Process any remaining pending images after all futures are done
+        while next_display_index in pending_images and next_display_index < total_rows:
+            if next_display_index not in displayed_images:
+                img, cap = pending_images[next_display_index]
+                with image_placeholders[next_display_index]:
+                    st.image(img, caption=f"Image {next_display_index + 1}", use_container_width=True)
+                    st.caption(cap)
+                    
+                    # Add download button for each image
+                    buf = io.BytesIO()
+                    img.save(buf, format="PNG")
+                    byte_im = buf.getvalue()
+                    
+                    st.download_button(
+                        label=f"Download Image {next_display_index + 1}",
+                        data=byte_im,
+                        file_name=f"ad_{next_display_index + 1}.png",
+                        mime="image/png",
+                        use_container_width=True,
+                        key=f"download_remaining_{next_display_index}"
+                    )
+                displayed_images.add(next_display_index)
+            next_display_index += 1
+                
+    # Only show completion message if we didn't stop due to error
+    if not stop_processing.is_set():
+        worker_info.empty()
+        status_text.empty()
+        if completed == total_rows:
+            st.success(f"Successfully generated all {completed} images!")
+        else:
+            st.warning(f"Completed with {completed} out of {total_rows} images generated.")
+        
+# Streamlit UI
+st.set_page_config(page_title="Dynamic ADs Generation", page_icon="🎨")
+
+st.header("Upload Logo in PNG")
+uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
+
+if uploaded_logo:
+    tab1, tab2 = st.tabs(["🔣 Input", "🗃 Data"])
+    
+    with tab1:
+        st.header("Generate Single Advertisement")
+        
+        # Create two columns for input fields
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            age = st.number_input("Age", min_value=18, max_value=100, value=30, 
+                                help="Enter age between 18-100")
+            
+            gender = st.selectbox("Gender", 
+                                options=["Male", "Female"],
+                                help="Select gender")
+            
+            profession = st.text_input("Profession",
+                                    placeholder="e.g., Software Engineer, Doctor, Teacher",
+                                    help="Enter the profession of the person")
+        
+        with col2:
+            location = st.selectbox("Location", 
+                                options=["Mumbai", "Delhi", "Bangalore", "Chennai", 
+                                        "Hyderabad", "Kolkata", "Pune", "Other"],
+                                help="Select or type a location")
+            
+            if location == "Other":
+                location = st.text_input("Enter Location",
+                                       placeholder="Enter city name")
+            
+            product = st.selectbox("Product Type",
+                                 options=["Home", "Personal", "Jewel", 
+                                         "Car", "Education", "Credit Card"],
+                                 help="Select the type of financial product")
+    
+        # Create a container for the generation process
+        generation_container = st.container()
+        
+        with generation_container:
+            if st.button("Generate Advertisement", type="primary", use_container_width=True):
+                if age and gender and profession and location and product:
+                    try:
+                        # Show generation status
+                        with st.status("Generating your advertisement...", expanded=True) as status:
+                            st.write("🎨 Creating base image...")
+                            img, caption = save_genimage(product, age, location, 0, gender, profession)
+                            
+                            st.write("✨ Adding banner and branding...")
+                            banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
+                            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
+                            
+                            st.write("✅ Finalizing advertisement...")
+                            status.update(label="Advertisement generated successfully!", state="complete")
+    
+                        # Show the generated image in an expander
+                        with st.expander("Generated Advertisement", expanded=True):
+                            st.image(final_image, caption=caption, use_container_width=True)
+                            
+                            # Add download button for the image
+                            # Convert image to bytes
+                            buf = io.BytesIO()
+                            final_image.save(buf, format="PNG")
+                            byte_im = buf.getvalue()
+                            
+                            st.download_button(
+                                label="Download Advertisement",
+                                data=byte_im,
+                                file_name=f"ad_{product.lower().replace(' ', '_')}.png",
+                                mime="image/png",
+                                use_container_width=True
+                            )
+                            
+                            # Add regenerate button
+                            if st.button("Generate Another Version", use_container_width=True):
+                                st.rerun()
+                    
+                    except Exception as e:
+                        st.error(f"Error generating image: {str(e)}")
+                        st.button("Try Again", use_container_width=True, on_click=st.rerun)
+                else:
+                    st.error("Please fill in all fields before generating the advertisement.")
+        
+            # Add helpful information
+            with st.expander("Tips for Better Results"):
+                st.markdown("""
+                ### 👉 Tips for Better Results:
+                1. **Age**: Choose an age that matches your target demographic
+                2. **Profession**: Be specific with professions (e.g., 'Senior Software Engineer' instead of just 'Engineer')
+                3. **Location**: Using major cities tends to give better results
+                4. **Gender**: Select the gender that best represents your target audience
+                
+                ### 🎯 Best Practices:
+                - Ensure your logo is clear and high-quality
+                - Consider the target audience for your financial product
+                - Test different combinations for optimal results
+                """)
+    
+    with tab2:
+        st.header("Generate Bulk Advertisements")
+        df = None
+        # Create two columns for input fields
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # File upload section
+            uploaded_file = st.file_uploader(
+                "Upload CSV File", 
+                type=['csv'],
+                help="Upload a CSV file with columns: Product, age, gender, job, location"
+            )
+            # Show sample format
+            with st.expander("View CSV Format"):
+                st.markdown("""
+                Your CSV should have the following columns:
+                - Product: Type of financial product
+                - age: Age of target customer (18-100)
+                - gender: Male/Female
+                - job: Customer profession
+                - location: City name
+                """)
+                
+                # Show sample data
+                st.markdown("**Sample Data:**")
+                st.code("""Product,age,gender,job,location
+    Home Loan,35,Male,Software Engineer,Mumbai
+    Personal Loan,28,Female,Doctor,Delhi
+    Business Loan,45,Male,Entrepreneur,Bangalore""")
+
+        with col2:
+            # Preview section (only shown when file is uploaded)
+            if uploaded_file is not None:
+                df = pd.read_csv(uploaded_file)
+                try:
+                    st.write("Data Preview:")
+                    st.dataframe(df.head(3), use_container_width=True)
+                    
+                    # Show data statistics
+                    with st.expander("Data Summary"):
+                        st.write(f"Total Rows: {len(df)}")
+                        st.write("Product Distribution:")
+                        st.dataframe(df['Product'].value_counts().head(), use_container_width=True)
+                except Exception as e:
+                    st.error(f"Error reading CSV file: {str(e)}")
+                    
+        if uploaded_file is not None:
+            # Generation controls in a separate container using full width
+            st.divider()
+            
+            # Create a container for generation controls
+            with st.container():
+                col3, col4 = st.columns(2)
+                
+                with col3:
+                    num_workers = st.slider(
+                        "Number of Parallel Workers",
+                        min_value=1,
+                        max_value=min(10, len(df)),
+                        value=min(4, len(df)),
+                        help="Adjust the number of parallel processes for image generation"
+                    )
+                
+                with col4:
+                    batch_size = st.number_input(
+                        "Batch Size",
+                        min_value=1,
+                        max_value=len(df),
+                        value=min(10, len(df)),
+                        help="Number of random images to generate in one batch"
+                    )
+                
+                # Generation button using full width
+                if st.button("Generate Advertisements", type="primary", use_container_width=True):
+                    # Validate data
+                    if validate_csv_data(df):
+                        try:
+                            # Full width container for generation status and images
+                            status_container = st.empty()
+                            with status_container.status("Generating advertisements...", expanded=True) as status:
+                                st.write(f"🎨 Preparing to generate random {batch_size} advertisements...")
+                                
+                                # Process the data with parallel execution
+                                process_csv_data_with_parallel_progress(
+                                    df.sample(batch_size), 
+                                    uploaded_logo,
+                                    num_workers=num_workers
+                                )
+                        
+                        except Exception as e:
+                            st.error(f"Error during generation: {str(e)}")
+                            if st.button("Try Again", use_container_width=True):
+                                st.rerun()
+                    else:
+                        st.error("Please ensure your CSV has all required columns with valid data.")
+                        st.info("Check the 'View CSV Format' section for the required format.")
