@@ -129,13 +129,10 @@ def save_genimage(product, age, location, income, gender, profession):
     caption = " ".join(system_prompt.split()[:6])
     return image, caption
 
-def resize_logo(uploaded_logo, target_width = 957, target_height = 261):
+def resize_logo(logo, target_width = 957, target_height = 261):
     """
     Resize the uploaded logo to match the target dimensions while maintaining the aspect ratio.
-    """
-    # Open the uploaded logo
-    logo = Image.open(uploaded_logo)
-    
+    """    
     # Calculate the aspect ratio of the uploaded logo
     uploaded_width, uploaded_height = logo.size
     uploaded_aspect_ratio = uploaded_width / uploaded_height
@@ -160,43 +157,6 @@ def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left")
     The logo is placed according to the `logo_position` argument.
     The tagline is added below the image or banner if provided.
     """
-    # Resize logo
-    uploaded_logo = resize_logo(uploaded_logo)
-    logo = Image.open(uploaded_logo)
-    logo_width = int(img.width * 0.2 * 1.5)
-    logo_height = int(logo.height * (logo_width / logo.width) * 1.2)
-    logo = logo.resize((logo_width, logo_height))
-
-    # Get the image dimensions
-    img_width, img_height = img.size
-
-    # Logo placement based on position
-    if logo_position == "top_left":
-        logo_x, logo_y = 10, 10
-    elif logo_position == "top_right":
-        logo_x, logo_y = img.width - logo_width - 10, 10
-    else:
-        raise ValueError("Invalid logo_position. Choose 'top_left' or 'top_right'.")
-
-    # Place logo onto the image
-    if logo.mode == 'RGBA':
-        mask = logo.split()[3]
-        rgb_logo = logo.convert('RGB')
-        img.paste(rgb_logo, (logo_x, logo_y), mask)
-    else:
-        rgb_logo = logo.convert('RGB')
-        img.paste(rgb_logo, (logo_x, logo_y))
-
-    # Resize banner to fit the image width
-    banner_width = int(img.width)
-    banner_height = int(banner.height * (banner_width / banner.width))
-    banner = banner.resize((banner_width, banner_height))
-
-    # Create a new image with the banner added below
-    new_image = Image.new('RGB', (img.width, img.height + banner_height), color=(255, 255, 255))
-    new_image.paste(img, (0, 0))
-    new_image.paste(banner, (0, img.height))
-
     """Applies tagline and logo to the image based on face locations."""
     # Load and resize the logo
     logo = Image.open(uploaded_logo)
@@ -533,6 +493,8 @@ st.header("Upload Logo in PNG")
 uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
 
 if uploaded_logo:
+    uploaded_logo = Image.open(uploaded_logo)
+    uploaded_logo = resize_logo(uploaded_logo)
     tab1, tab2 = st.tabs(["🔣 Input", "🗃 Data"])
     
     with tab1:
