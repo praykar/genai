@@ -129,6 +129,31 @@ def save_genimage(product, age, location, income, gender, profession):
     caption = " ".join(system_prompt.split()[:6])
     return image, caption
 
+def resize_logo(uploaded_logo, target_width = 957, target_height = 261):
+    """
+    Resize the uploaded logo to match the target dimensions while maintaining the aspect ratio.
+    """
+    # Open the uploaded logo
+    logo = Image.open(uploaded_logo)
+    
+    # Calculate the aspect ratio of the uploaded logo
+    uploaded_width, uploaded_height = logo.size
+    uploaded_aspect_ratio = uploaded_width / uploaded_height
+    benchmark_aspect_ratio = target_width / target_height
+    # Resize the logo while maintaining the aspect ratio
+    if uploaded_aspect_ratio > benchmark_aspect_ratio:
+        # Width is the limiting dimension
+        new_width = target_width
+        new_height = int(target_width / uploaded_aspect_ratio)
+    else:
+        # Height is the limiting dimension
+        new_height = target_height
+        new_width = int(target_height * uploaded_aspect_ratio)
+    
+    # Resize the logo
+    resized_logo = logo.resize((new_width, new_height), Image.Resampling.LANCZOS)
+    return resized_logo
+    
 def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
     """
     Adds a logo and a tagline to the image and the banner.
@@ -136,6 +161,7 @@ def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left")
     The tagline is added below the image or banner if provided.
     """
     # Resize logo
+    uploaded_logo = resize_logo(uploaded_logo)
     logo = Image.open(uploaded_logo)
     logo_width = int(img.width * 0.2 * 1.5)
     logo_height = int(logo.height * (logo_width / logo.width) * 1.2)
