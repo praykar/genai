@@ -151,7 +151,7 @@ def resize_logo(logo, target_width = 957, target_height = 261):
     resized_logo = logo.resize((new_width, new_height), Image.Resampling.LANCZOS)
     return resized_logo
     
-def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
+def apply_tagline_and_logo(img, banner, logo, logo_position="top_left"):
     """
     Adds a logo and a tagline to the image and the banner.
     The logo is placed according to the `logo_position` argument.
