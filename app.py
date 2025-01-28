@@ -238,7 +238,7 @@ def process_logo_upload(uploaded_file):
             processed_logo = validate_and_resize_logo(uploaded_file)
             
             # Preview resized logo
-            st.image(processed_logo, caption="Processed Logo", use_column_width=True)
+            st.image(processed_logo, caption="Processed Logo", use_container_width =True)
             
             return processed_logo
             
