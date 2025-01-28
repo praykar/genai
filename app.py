@@ -14,7 +14,7 @@ from enum import Enum, auto
 import time
 import io
 
-KEY = st.secrets['HF_TOKEN']
+KEY = os.getenv('HF_TOKEN')
 client = InferenceClient("black-forest-labs/FLUX.1-dev", token=KEY)
 
 # Define message types for queue communication
@@ -381,6 +381,9 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
     # Flag to track if we should stop processing
     stop_processing = threading.Event()
     
+    # Dictionary to store all generated images and captions
+    generated_images = {}
+    
     def process_single_image(index, row):
         if stop_processing.is_set():
             return False
@@ -406,15 +409,8 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                 data={'index': index}
             ))
             
-            # Send image
-            message_queue.put(Message(
-                type=MessageType.IMAGE,
-                data={
-                    'index': index, 
-                    'image': final_image, 
-                    'caption': f"{row['Product']} for {row['gender']} {row['age']}-year-old {row['job']} from {row['location']}"
-                }
-            ))
+            # Store the generated image and caption
+            generated_images[index] = (final_image, caption)
             
             return True
             
@@ -433,20 +429,6 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                 ))
             return False
 
-    # Add custom CSS for image cards
-    st.markdown("""
-        <style>
-            .stImage {
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                padding: 5px;
-            }
-            .download-button {
-                margin-top: 10px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
     # Start processing in parallel
     with ThreadPoolExecutor(max_workers=num_workers) as executor:
         # Submit all tasks
@@ -457,9 +439,6 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
         
         # Initialize tracking variables
         completed = 0
-        displayed_images = set()
-        pending_images = {}
-        next_display_index = 0
         
         # Process messages from queue until all tasks are complete or stop signal
         while (not all(future.done() for future in futures) or not message_queue.empty()) and not stop_processing.is_set():
@@ -484,70 +463,33 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                     completed += 1
                     progress_bar.progress(completed / total_rows)
                     status_text.text(f"Generated {completed} of {total_rows} images")
-                    
-                elif message.type == MessageType.IMAGE:
-                    index = message.data['index']
-                    final_image = message.data['image']
-                    caption = message.data['caption']
-                    
-                    # Store the image in pending_images
-                    pending_images[index] = (final_image, caption)
-                    
-                    # Display images in order
-                    while next_display_index in pending_images and next_display_index < total_rows:
-                        if next_display_index not in displayed_images:
-                            img, cap = pending_images[next_display_index]
-                            
-                            with image_placeholders[next_display_index]:
-                                st.image(img, caption=f"Image {next_display_index + 1}", use_container_width=True)
-                                st.caption(cap)
-                                
-                                # Add download button for each image
-                                buf = io.BytesIO()
-                                img.save(buf, format="PNG")
-                                byte_im = buf.getvalue()
-                                
-                                st.download_button(
-                                    label=f"Download Image {next_display_index + 1}",
-                                    data=byte_im,
-                                    file_name=f"ad_{next_display_index + 1}.png",
-                                    mime="image/png",
-                                    use_container_width=True,
-                                    key=f"download_{next_display_index}"
-                                )
-                            
-                            displayed_images.add(next_display_index)
-                        next_display_index += 1
                 
-                elif message.type == MessageType.ERROR:
-                    st.error(f"Error processing row {message.data['index'] + 1}: {message.data['error']}")
-                    
             except queue.Empty:
                 continue
         
-        # Process any remaining pending images after all futures are done
-        while next_display_index in pending_images and next_display_index < total_rows:
-            if next_display_index not in displayed_images:
-                img, cap = pending_images[next_display_index]
-                with image_placeholders[next_display_index]:
-                    st.image(img, caption=f"Image {next_display_index + 1}", use_container_width=True)
-                    st.caption(cap)
-                    
-                    # Add download button for each image
-                    buf = io.BytesIO()
-                    img.save(buf, format="PNG")
-                    byte_im = buf.getvalue()
-                    
-                    st.download_button(
-                        label=f"Download Image {next_display_index + 1}",
-                        data=byte_im,
-                        file_name=f"ad_{next_display_index + 1}.png",
-                        mime="image/png",
-                        use_container_width=True,
-                        key=f"download_remaining_{next_display_index}"
-                    )
-                displayed_images.add(next_display_index)
-            next_display_index += 1
+        # Wait for all futures to complete
+        for future in futures:
+            future.result()  # Ensure all futures are done
+        
+        # Display all images at once
+        for index, (img, caption) in generated_images.items():
+            with image_placeholders[index]:
+                st.image(img, caption=f"Image {index + 1}", use_container_width=True)
+                st.caption(caption)
+                
+                # Add download button for each image
+                buf = io.BytesIO()
+                img.save(buf, format="PNG")
+                byte_im = buf.getvalue()
+                
+                st.download_button(
+                    label=f"Download Image {index + 1}",
+                    data=byte_im,
+                    file_name=f"ad_{index + 1}.png",
+                    mime="image/png",
+                    use_container_width=True,
+                    key=f"download_{index}"
+                )
                 
     # Only show completion message if we didn't stop due to error
     if not stop_processing.is_set():
