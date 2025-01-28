@@ -129,15 +129,15 @@ def save_genimage(product, age, location, income, gender, profession):
     caption = " ".join(system_prompt.split()[:6])
     return image, caption
 
-def resize_logo(uploaded_logo, target_width=957, target_height=261):
+def resize_logo(uploaded_logo, target_width=800, target_height=200):
     """
-    Resize uploaded logo to standard dimensions while maintaining aspect ratio.
-    Adds padding if necessary to meet target dimensions.
+    Resize uploaded logo to larger dimensions for better visibility in advertisements.
+    Maintains aspect ratio and adds padding if necessary.
     
     Parameters:
     uploaded_logo: Streamlit uploaded file or bytes
-    target_width: int, desired width in pixels (default 300)
-    target_height: int, desired height in pixels (default 75)
+    target_width: int, desired width in pixels (default 800)
+    target_height: int, desired height in pixels (default 200)
     
     Returns:
     PIL.Image: Resized and padded logo image
@@ -167,7 +167,7 @@ def resize_logo(uploaded_logo, target_width=957, target_height=261):
             new_height = target_height
             new_width = int(target_height * image_ratio)
             
-        # Resize image
+        # Resize image with high-quality resampling
         resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
         
         # Create new image with padding
@@ -185,9 +185,10 @@ def resize_logo(uploaded_logo, target_width=957, target_height=261):
     except Exception as e:
         raise Exception(f"Error processing logo: {str(e)}")
 
-def validate_and_resize_logo(uploaded_logo, min_width=180, min_height=45, max_width=500, max_height=125):
+def validate_and_resize_logo(uploaded_logo, min_width=400, min_height=100, max_width=1200, max_height=300):
     """
     Validates logo dimensions and resizes if necessary.
+    Uses larger dimensions for better visibility in advertisements.
     
     Parameters:
     uploaded_logo: Streamlit uploaded file
@@ -206,21 +207,24 @@ def validate_and_resize_logo(uploaded_logo, min_width=180, min_height=45, max_wi
         
         # Calculate target size based on original dimensions
         if width < min_width or height < min_height:
-            # If image is too small, resize to standard size
-            return resize_logo(uploaded_logo, target_width=300, target_height=75)
+            # If image is too small, resize to standard larger size
+            return resize_logo(uploaded_logo, target_width=800, target_height=200)
         elif width > max_width or height > max_height:
             # If image is too large, resize to maximum allowed size
             return resize_logo(uploaded_logo, target_width=max_width, target_height=max_height)
         else:
             # If image is within acceptable range, maintain original size
-            return resize_logo(uploaded_logo, target_width=width, target_height=height)
+            # but ensure it's not smaller than the minimum dimensions
+            target_width = max(width, min_width)
+            target_height = max(height, min_height)
+            return resize_logo(uploaded_logo, target_width=target_width, target_height=target_height)
             
     except Exception as e:
         raise Exception(f"Error validating logo: {str(e)}")
 
 def process_logo_upload(uploaded_file):
     """
-    Process logo upload in Streamlit app.
+    Process logo upload in Streamlit app with larger dimensions.
     
     Parameters:
     uploaded_file: st.file_uploader result
@@ -234,7 +238,7 @@ def process_logo_upload(uploaded_file):
             processed_logo = validate_and_resize_logo(uploaded_file)
             
             # Preview resized logo
-            st.image(processed_logo, caption="Processed Logo", use_container_width=False)
+            st.image(processed_logo, caption="Processed Logo", use_column_width=True)
             
             return processed_logo
             
