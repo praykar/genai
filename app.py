@@ -492,8 +492,8 @@ st.header("Upload Logo in PNG")
 uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
 
 if uploaded_logo:
-    uploaded_logo = Image.open(uploaded_logo)
-    uploaded_logo = resize_logo(uploaded_logo)
+    logo = Image.open(uploaded_logo)
+    resized_logo = resize_logo(logo)
     tab1, tab2 = st.tabs(["🔣 Input", "🗃 Data"])
     
     with tab1:
@@ -543,7 +543,7 @@ if uploaded_logo:
                             
                             st.write("✨ Adding banner and branding...")
                             banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
-                            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
+                            final_image = apply_tagline_and_logo(img, banner, resized_logo, logo_position="top_right")
                             
                             st.write("✅ Finalizing advertisement...")
                             status.update(label="Advertisement generated successfully!", state="complete")
@@ -677,7 +677,7 @@ if uploaded_logo:
                                 # Process the data with parallel execution
                                 process_csv_data_with_parallel_progress(
                                     df.sample(batch_size), 
-                                    uploaded_logo,
+                                    resized_logo,
                                     num_workers=num_workers
                                 )
                         
