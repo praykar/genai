@@ -221,13 +221,13 @@ streamlit run app.py
 ## **Screenshots**
 
 ### **Single Advertisement Generation**
-![Single Ad Generation](screenshots/single_ad.png)
+![Single Ad Generation](Screenshots/single_ad.png)
 
 ### **Bulk Advertisement Generation**
-![Bulk Ad Generation](screenshots/bulk_ad.png)
+![Bulk Ad Generation](Screenshots/bulk_ad.png)
 
 ### **Download Options**
-![Download Options](screenshots/download.png)
+![Download Options](Screenshots/download.png)
 
 ---
 
