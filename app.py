@@ -129,7 +129,7 @@ def save_genimage(product, age, location, income, gender, profession):
     caption = " ".join(system_prompt.split()[:6])
     return image, caption
 
-def resize_logo(uploaded_logo, target_width=300, target_height=75):
+def resize_logo(uploaded_logo, target_width=957, target_height=261):
     """
     Resize uploaded logo to standard dimensions while maintaining aspect ratio.
     Adds padding if necessary to meet target dimensions.
@@ -234,7 +234,7 @@ def process_logo_upload(uploaded_file):
             processed_logo = validate_and_resize_logo(uploaded_file)
             
             # Preview resized logo
-            st.image(processed_logo, caption="Processed Logo", use_column_width=False)
+            st.image(processed_logo, caption="Processed Logo", use_container_width=False)
             
             return processed_logo
             
