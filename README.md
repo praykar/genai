@@ -22,6 +22,13 @@ This tool is particularly useful for marketing teams, financial institutions, an
 
 ---
 
+## Table of Contents
+- [Installation](#Installation)
+- [Usage](#Usage)
+- [Features](#Features)
+- [Screenshots](#Screenshots)
+- [Flowcharts](#Flowchart)
+  
 ## **Features**
 1. **Single Advertisement Generation:**
    - Create personalized ads by providing age, gender, profession, location, and product type.
@@ -92,6 +99,31 @@ This tool is particularly useful for marketing teams, financial institutions, an
 +-------------------+
 ```
 
+
+### Function Flow - `save_genimage`
+```mermaid
+graph TD;
+    A[Start] --> B[Get Parameters];
+    B --> C[Set Product Type];
+    C --> D[Set System Prompt];
+    D --> E[Generate Image using Hugging Face API];
+    E --> F[Handle Errors];
+    F --> G[Return Image and Caption];
+```
+
+### Function Flow - `apply_tagline_and_logo`
+```mermaid
+graph TD;
+    A[Start] --> B[Resize Logo];
+    B --> C[Get Image Dimensions];
+    C --> D[Place Logo Based on Position];
+    D --> E[Resize Banner];
+    E --> F[Create New Image with Banner];
+    F --> G[Add Tagline];
+    G --> H[Detect Faces];
+    H --> I[Position Tagline];
+    I --> J[Return Final Image];
+```
 ---
 
 ## **Usage**
@@ -256,5 +288,11 @@ For questions or feedback, please contact:
 - Thanks to the Streamlit team for the amazing framework.
 
 ---
+
+## Conclusion
+
+This project provides a comprehensive solution for generating dynamic advertisements with AI. Customize your advertisements by providing appropriate inputs and generate bulk advertisements using CSV files for efficient marketing campaigns.
+
+For more details, refer to the code in `app.py`.
 
 Enjoy creating dynamic advertisements with ease! 🚀
