@@ -462,10 +462,22 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
         else:
             st.warning(f"Completed with {completed} out of {total_rows} images generated.")
             
-def show_customization_controls(img, banner, uploaded_logo, caption):
+def show_customization_controls(base_img, base_banner, uploaded_logo, caption):
+    """
+    Show customization controls and handle image updates using session state
+    """
     st.divider()
     st.subheader("Customize Advertisement")
     
+    # Initialize session state for storing slider values if they don't exist
+    if 'logo_scale' not in st.session_state:
+        st.session_state.logo_scale = 0.2
+    if 'banner_scale' not in st.session_state:
+        st.session_state.banner_scale = 0.08
+    if 'font_scale' not in st.session_state:
+        st.session_state.font_scale = 1.0
+    
+    # Create columns for sliders
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -473,8 +485,9 @@ def show_customization_controls(img, banner, uploaded_logo, caption):
             "Logo Size",
             min_value=0.1,
             max_value=0.5,
-            value=0.2,
+            value=st.session_state.logo_scale,
             step=0.05,
+            key='logo_slider',
             help="Adjust the size of the logo relative to image width"
         )
     
@@ -483,8 +496,9 @@ def show_customization_controls(img, banner, uploaded_logo, caption):
             "Banner Height",
             min_value=0.05,
             max_value=0.2,
-            value=0.08,
+            value=st.session_state.banner_scale,
             step=0.01,
+            key='banner_slider',
             help="Adjust the height of the banner relative to image height"
         )
     
@@ -493,46 +507,50 @@ def show_customization_controls(img, banner, uploaded_logo, caption):
             "Font Size",
             min_value=0.5,
             max_value=2.0,
-            value=1.0,
+            value=st.session_state.font_scale,
             step=0.1,
+            key='font_slider',
             help="Adjust the size of text in the banner"
         )
     
-    if st.button("Apply Changes", use_container_width=True):
-        with st.spinner("Applying customizations..."):
-            # Create new banner with updated font size
-            new_banner = create_banner(
-                width=int(img.width),
-                height=int(img.height * banner_scale),
-                font_scale=font_scale
-            )
-            
-            # Apply customizations
-            final_image = apply_tagline_and_logo(
-                img.copy(),
-                new_banner,
-                uploaded_logo,
-                logo_position="top_right",
-                logo_scale=logo_scale,
-                banner_scale=banner_scale,
-                font_scale=font_scale
-            )
-            
-            # Display updated image
-            st.image(final_image, caption=caption, use_container_width=True)
-            
-            # Add download button for customized image
-            buf = io.BytesIO()
-            final_image.save(buf, format="PNG")
-            byte_im = buf.getvalue()
-            
-            st.download_button(
-                label="Download Customized Advertisement",
-                data=byte_im,
-                file_name=f"customized_ad.png",
-                mime="image/png",
-                use_container_width=True
-            )        
+    # Store current values in session state
+    st.session_state.logo_scale = logo_scale
+    st.session_state.banner_scale = banner_scale
+    st.session_state.font_scale = font_scale
+    
+    # Create new banner with updated font size
+    new_banner = create_banner(
+        width=int(base_img.width),
+        height=int(base_img.height * banner_scale),
+        font_scale=font_scale
+    )
+    
+    # Apply customizations
+    final_image = apply_tagline_and_logo(
+        base_img.copy(),
+        new_banner,
+        uploaded_logo,
+        logo_position="top_right",
+        logo_scale=logo_scale,
+        banner_scale=banner_scale,
+        font_scale=font_scale
+    )
+    
+    # Display updated image
+    st.image(final_image, caption=caption, use_container_width=True)
+    
+    # Add download button for customized image
+    buf = io.BytesIO()
+    final_image.save(buf, format="PNG")
+    byte_im = buf.getvalue()
+    
+    st.download_button(
+        label="Download Customized Advertisement",
+        data=byte_im,
+        file_name=f"customized_ad.png",
+        mime="image/png",
+        use_container_width=True
+    )
             
 # Streamlit UI
 st.set_page_config(page_title="Dynamic ADs Generation", page_icon="🎨")
@@ -584,38 +602,31 @@ if uploaded_logo:
                     try:
                         with st.status("Generating your advertisement...", expanded=True) as status:
                             st.write("🎨 Creating base image...")
-                            img, caption = save_genimage(product, age, location, 0, gender, profession)
+                            base_img, caption = save_genimage(product, age, location, 0, gender, profession)
+                            
+                            # Store base image and caption in session state
+                            st.session_state.base_img = base_img
+                            st.session_state.base_caption = caption
                             
                             st.write("✨ Adding banner and branding...")
-                            banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
-                            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
+                            base_banner = create_banner(width=int(base_img.width), height=int(base_img.height * 0.08))
+                            st.session_state.base_banner = base_banner
+                            
+                            # Generate initial version
+                            final_image = apply_tagline_and_logo(base_img, base_banner, uploaded_logo, logo_position="top_right")
                             
                             st.write("✅ Finalizing advertisement...")
                             status.update(label="Advertisement generated successfully!", state="complete")
                         
                         # Show the generated image and customization controls
                         with st.expander("Generated Advertisement", expanded=True):
-                            st.image(final_image, caption=caption, use_container_width=True)
-                            show_customization_controls(img, banner, uploaded_logo, caption)
-                            
-                            # Add download button for the image
-                            # Convert image to bytes
-                            buf = io.BytesIO()
-                            final_image.save(buf, format="PNG")
-                            byte_im = buf.getvalue()
-                            
-                            st.download_button(
-                                label="Download Advertisement",
-                                data=byte_im,
-                                file_name=f"ad_{product.lower().replace(' ', '_')}.png",
-                                mime="image/png",
-                                use_container_width=True
-                            )
-                            
-                            # Add regenerate button
-                            if st.button("Generate Another Version", use_container_width=True):
-                                st.rerun()
-                    
+                            if 'base_img' in st.session_state:
+                                show_customization_controls(
+                                    st.session_state.base_img,
+                                    st.session_state.base_banner,
+                                    uploaded_logo,
+                                    st.session_state.base_caption
+                                )
                     except Exception as e:
                         st.error(f"Error generating image: {str(e)}")
                         st.button("Try Again", use_container_width=True, on_click=st.rerun)
