@@ -462,9 +462,9 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
         else:
             st.warning(f"Completed with {completed} out of {total_rows} images generated.")
             
-def show_customization_controls(container, base_img, base_banner, uploaded_logo, caption):
+def show_customization_controls(base_img, base_banner, uploaded_logo, caption):
     """
-    Show customization controls and update image in container
+    Show customization controls with button-based updates
     """
     st.divider()
     st.subheader("Customize Advertisement")
@@ -472,13 +472,38 @@ def show_customization_controls(container, base_img, base_banner, uploaded_logo,
     # Create columns for sliders
     col1, col2, col3 = st.columns(3)
     
-    # Function to update image based on current slider values
-    def update_image():
-        # Get current slider values
-        logo_scale = logo_slider
-        banner_scale = banner_slider
-        font_scale = font_slider
-        
+    with col1:
+        logo_scale = st.slider(
+            "Logo Size",
+            min_value=0.1,
+            max_value=0.5,
+            value=0.2,
+            step=0.05,
+            help="Adjust the size of the logo relative to image width"
+        )
+    
+    with col2:
+        banner_scale = st.slider(
+            "Banner Height",
+            min_value=0.05,
+            max_value=0.2,
+            value=0.08,
+            step=0.01,
+            help="Adjust the height of the banner relative to image height"
+        )
+    
+    with col3:
+        font_scale = st.slider(
+            "Font Size",
+            min_value=0.5,
+            max_value=2.0,
+            value=1.0,
+            step=0.1,
+            help="Adjust the size of text in the banner"
+        )
+    
+    # Add Apply Changes button
+    if st.button("Apply Changes", use_container_width=True):
         # Create new banner with updated font size
         new_banner = create_banner(
             width=int(base_img.width),
@@ -497,59 +522,30 @@ def show_customization_controls(container, base_img, base_banner, uploaded_logo,
             font_scale=font_scale
         )
         
-        # Clear and update the container
-        container.empty()
-        container.image(final_image, caption=caption, use_container_width=True)
+        # Display updated image
+        st.image(final_image, caption=caption, use_container_width=True)
         
         # Add download button
         buf = io.BytesIO()
         final_image.save(buf, format="PNG")
         byte_im = buf.getvalue()
         
-        container.download_button(
+        st.download_button(
             label="Download Customized Advertisement",
             data=byte_im,
             file_name=f"customized_ad.png",
             mime="image/png",
             use_container_width=True
         )
-        show_customization_controls(container, final_image, new_banner, uploaded_logo, caption)
-    
-    with col1:
-        logo_slider = st.slider(
-            "Logo Size",
-            min_value=0.1,
-            max_value=0.5,
-            value=0.2,
-            step=0.05,
-            on_change=update_image,
-            help="Adjust the size of the logo relative to image width"
+    else:
+        # Show original image
+        initial_image = apply_tagline_and_logo(
+            base_img.copy(),
+            base_banner,
+            uploaded_logo,
+            logo_position="top_right"
         )
-    
-    with col2:
-        banner_slider = st.slider(
-            "Banner Height",
-            min_value=0.05,
-            max_value=0.2,
-            value=0.08,
-            step=0.01,
-            on_change=update_image,
-            help="Adjust the height of the banner relative to image height"
-        )
-    
-    with col3:
-        font_slider = st.slider(
-            "Font Size",
-            min_value=0.5,
-            max_value=2.0,
-            value=1.0,
-            step=0.1,
-            on_change=update_image,
-            help="Adjust the size of text in the banner"
-        )
-    
-    # Initial image update
-    update_image()
+        st.image(initial_image, caption=caption, use_container_width=True)
             
 # Streamlit UI
 st.set_page_config(page_title="Dynamic ADs Generation", page_icon="🎨")
@@ -609,11 +605,9 @@ if uploaded_logo:
                             st.write("✅ Finalizing advertisement...")
                             status.update(label="Advertisement generated successfully!", state="complete")
                         
-                        # Create a container for the image and controls
+                        # Show the controls and image in an expander
                         with st.expander("Generated Advertisement", expanded=True):
-                            image_container = st.container()
                             show_customization_controls(
-                                image_container,
                                 base_img,
                                 base_banner,
                                 uploaded_logo,
