@@ -38,14 +38,14 @@ def load_font(font_path, font_size):
         font = default_font.font_variant(size=font_size)
     return font
 
-def create_banner(width=1200, height=120):
+def create_banner(width=1200, height=120, font_scale=1.0):
+    """Create banner with customizable font size"""
     image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
-
     background = Image.new('RGBA', (width, height), (242, 101, 34, 255))
     image.paste(background, (0, 0), background)
-
+    
     draw = ImageDraw.Draw(image)
-    font_size = image.height * 0.25 
+    font_size = int(image.height * 0.25 * font_scale)
     font = load_font("Helvetica.ttc", font_size)
 
     texts = ["Low Interest Rates",'|', "Hassle Free process",'|', "Flexible tenure"]
@@ -129,20 +129,24 @@ def save_genimage(product, age, location, income, gender, profession):
     caption = " ".join(system_prompt.split()[:6])
     return image, caption
 
-def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
+def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left", logo_scale=0.2, banner_scale=0.08, font_scale=1.0):
     """
-    Adds a logo and a tagline to the image and the banner.
-    The logo is placed according to the `logo_position` argument.
-    The tagline is added below the image or banner if provided.
+    Adds a logo and a tagline to the image and the banner with customizable sizes.
+    
+    Parameters:
+    - logo_scale: Scale factor for logo size (relative to image width)
+    - banner_scale: Scale factor for banner height (relative to image height)
+    - font_scale: Scale factor for font sizes in banner
     """
-    """Applies tagline and logo to the image based on face locations."""
-    # Load and resize the logo
+    # Load and resize the logo with customizable scale
     logo = Image.open(uploaded_logo)
-    logo_width = int(img.width * 0.2 * 1.5)  # 20% of image width
+    logo_width = int(img.width * logo_scale * 1.5)
     logo_height = int(logo.height * (logo_width / logo.width) * 1.2)
     logo = logo.resize((logo_width, logo_height))
+    
     # Get image dimensions
     img_width, img_height = img.size
+    
     # Calculate logo position
     if logo_position == "top_left":
         logo_x = 10
@@ -150,30 +154,24 @@ def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left")
     elif logo_position == "top_right":
         logo_x = img.width - logo_width - 10
         logo_y = 10
-    else:
-        raise ValueError("Invalid logo_position. Choose 'top_left' or 'top_right'.")
     
-    # Ensure the logo has transparency handling
+    # Handle logo transparency
     if logo.mode == 'RGBA':
         mask = logo.split()[3]
         rgb_logo = logo.convert('RGB')
-        img.paste(rgb_logo, (logo_x, logo_y), mask)  # Use mask for transparency if logo has it
+        img.paste(rgb_logo, (logo_x, logo_y), mask)
     else:
         rgb_logo = logo.convert('RGB')
-        img.paste(rgb_logo, (logo_x, logo_y))  # Use RGB if no transparency
+        img.paste(rgb_logo, (logo_x, logo_y))
     
-    # Resize the banner if it's already an Image object
-    banner_width = int(img.width)  # 100% of image width
-    banner_height = int(banner.height * (banner_width / banner.width))
+    # Resize banner with custom scale
+    banner_width = int(img.width)
+    banner_height = int(img.height * banner_scale)
     banner = banner.resize((banner_width, banner_height))
-
-    # Create a new blank image with the calculated dimensions
+    
+    # Create new image with adjusted dimensions
     new_image = Image.new('RGB', (img.width, img.height + banner_height), color=(255, 255, 255))
-    
-    # Paste the first image at the top
     new_image.paste(img, (0, 0))
-    
-    # Paste the second image (banner) at the bottom
     new_image.paste(banner, (0, img.height))
 
     # Add tagline to the image
@@ -463,7 +461,79 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
             st.success(f"Successfully generated all {completed} images!")
         else:
             st.warning(f"Completed with {completed} out of {total_rows} images generated.")
-        
+            
+def show_customization_controls(img, banner, uploaded_logo, caption):
+    st.divider()
+    st.subheader("Customize Advertisement")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        logo_scale = st.slider(
+            "Logo Size",
+            min_value=0.1,
+            max_value=0.5,
+            value=0.2,
+            step=0.05,
+            help="Adjust the size of the logo relative to image width"
+        )
+    
+    with col2:
+        banner_scale = st.slider(
+            "Banner Height",
+            min_value=0.05,
+            max_value=0.2,
+            value=0.08,
+            step=0.01,
+            help="Adjust the height of the banner relative to image height"
+        )
+    
+    with col3:
+        font_scale = st.slider(
+            "Font Size",
+            min_value=0.5,
+            max_value=2.0,
+            value=1.0,
+            step=0.1,
+            help="Adjust the size of text in the banner"
+        )
+    
+    if st.button("Apply Changes", use_container_width=True):
+        with st.spinner("Applying customizations..."):
+            # Create new banner with updated font size
+            new_banner = create_banner(
+                width=int(img.width),
+                height=int(img.height * banner_scale),
+                font_scale=font_scale
+            )
+            
+            # Apply customizations
+            final_image = apply_tagline_and_logo(
+                img.copy(),
+                new_banner,
+                uploaded_logo,
+                logo_position="top_right",
+                logo_scale=logo_scale,
+                banner_scale=banner_scale,
+                font_scale=font_scale
+            )
+            
+            # Display updated image
+            st.image(final_image, caption=caption, use_container_width=True)
+            
+            # Add download button for customized image
+            buf = io.BytesIO()
+            final_image.save(buf, format="PNG")
+            byte_im = buf.getvalue()
+            
+            st.download_button(
+                label="Download Customized Advertisement",
+                data=byte_im,
+                file_name=f"customized_ad.png",
+                mime="image/png",
+                use_container_width=True
+            )        
+            
 # Streamlit UI
 st.set_page_config(page_title="Dynamic ADs Generation", page_icon="🎨")
 
@@ -512,7 +582,6 @@ if uploaded_logo:
             if st.button("Generate Advertisement", type="primary", use_container_width=True):
                 if age and gender and profession and location and product:
                     try:
-                        # Show generation status
                         with st.status("Generating your advertisement...", expanded=True) as status:
                             st.write("🎨 Creating base image...")
                             img, caption = save_genimage(product, age, location, 0, gender, profession)
@@ -523,10 +592,11 @@ if uploaded_logo:
                             
                             st.write("✅ Finalizing advertisement...")
                             status.update(label="Advertisement generated successfully!", state="complete")
-    
-                        # Show the generated image in an expander
+                        
+                        # Show the generated image and customization controls
                         with st.expander("Generated Advertisement", expanded=True):
                             st.image(final_image, caption=caption, use_container_width=True)
+                            show_customization_controls(img, banner, uploaded_logo, caption)
                             
                             # Add download button for the image
                             # Convert image to bytes
