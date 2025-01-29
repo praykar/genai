@@ -14,7 +14,7 @@ from enum import Enum, auto
 import time
 import io
 
-KEY = os.getenv('HF_TOKEN')
+KEY = st.secrets['HF_TOKEN']
 client = InferenceClient("black-forest-labs/FLUX.1-dev", token=KEY)
 
 # Define message types for queue communication
@@ -129,125 +129,7 @@ def save_genimage(product, age, location, income, gender, profession):
     caption = " ".join(system_prompt.split()[:6])
     return image, caption
 
-def resize_logo(uploaded_logo, target_width=800, target_height=200):
-    """
-    Resize uploaded logo to larger dimensions for better visibility in advertisements.
-    Maintains aspect ratio and adds padding if necessary.
-    
-    Parameters:
-    uploaded_logo: Streamlit uploaded file or bytes
-    target_width: int, desired width in pixels (default 800)
-    target_height: int, desired height in pixels (default 200)
-    
-    Returns:
-    PIL.Image: Resized and padded logo image
-    """
-    try:
-        # Convert uploaded file to PIL Image
-        if isinstance(uploaded_logo, bytes):
-            image = Image.open(io.BytesIO(uploaded_logo))
-        else:
-            image = Image.open(uploaded_logo)
-            
-        # Convert to RGBA to handle transparency
-        if image.mode != 'RGBA':
-            image = image.convert('RGBA')
-            
-        # Calculate aspect ratios
-        target_ratio = target_width / target_height
-        image_ratio = image.width / image.height
-        
-        # Calculate new dimensions maintaining aspect ratio
-        if image_ratio > target_ratio:
-            # Image is wider than target ratio
-            new_width = target_width
-            new_height = int(target_width / image_ratio)
-        else:
-            # Image is taller than target ratio
-            new_height = target_height
-            new_width = int(target_height * image_ratio)
-            
-        # Resize image with high-quality resampling
-        resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
-        
-        # Create new image with padding
-        final_image = Image.new('RGBA', (target_width, target_height), (255, 255, 255, 0))
-        
-        # Calculate padding to center the image
-        x_offset = (target_width - new_width) // 2
-        y_offset = (target_height - new_height) // 2
-        
-        # Paste resized image onto padded background
-        final_image.paste(resized_image, (x_offset, y_offset), resized_image)
-        
-        return final_image
-        
-    except Exception as e:
-        raise Exception(f"Error processing logo: {str(e)}")
-
-def validate_and_resize_logo(uploaded_logo, min_width=400, min_height=100, max_width=1200, max_height=300):
-    """
-    Validates logo dimensions and resizes if necessary.
-    Uses larger dimensions for better visibility in advertisements.
-    
-    Parameters:
-    uploaded_logo: Streamlit uploaded file
-    min_width: int, minimum allowed width
-    min_height: int, minimum allowed height
-    max_width: int, maximum allowed width
-    max_height: int, maximum allowed height
-    
-    Returns:
-    PIL.Image: Processed logo image
-    """
-    try:
-        # Open image to check dimensions
-        image = Image.open(uploaded_logo)
-        width, height = image.size
-        
-        # Calculate target size based on original dimensions
-        if width < min_width or height < min_height:
-            # If image is too small, resize to standard larger size
-            return resize_logo(uploaded_logo, target_width=800, target_height=200)
-        elif width > max_width or height > max_height:
-            # If image is too large, resize to maximum allowed size
-            return resize_logo(uploaded_logo, target_width=max_width, target_height=max_height)
-        else:
-            # If image is within acceptable range, maintain original size
-            # but ensure it's not smaller than the minimum dimensions
-            target_width = max(width, min_width)
-            target_height = max(height, min_height)
-            return resize_logo(uploaded_logo, target_width=target_width, target_height=target_height)
-            
-    except Exception as e:
-        raise Exception(f"Error validating logo: {str(e)}")
-
-def process_logo_upload(uploaded_file):
-    """
-    Process logo upload in Streamlit app with larger dimensions.
-    
-    Parameters:
-    uploaded_file: st.file_uploader result
-    
-    Returns:
-    PIL.Image: Processed logo image
-    """
-    if uploaded_file is not None:
-        try:
-            # Validate and resize logo
-            processed_logo = validate_and_resize_logo(uploaded_file)
-            
-            # Preview resized logo
-            st.image(processed_logo, caption="Processed Logo", use_container_width =True)
-            
-            return processed_logo
-            
-        except Exception as e:
-            st.error(f"Error processing logo: {str(e)}")
-            return None
-    return None
-    
-def apply_tagline_and_logo(img, banner, logo, logo_position="top_left"):
+def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
     """
     Adds a logo and a tagline to the image and the banner.
     The logo is placed according to the `logo_position` argument.
@@ -255,6 +137,7 @@ def apply_tagline_and_logo(img, banner, logo, logo_position="top_left"):
     """
     """Applies tagline and logo to the image based on face locations."""
     # Load and resize the logo
+    logo = Image.open(uploaded_logo)
     logo_width = int(img.width * 0.2 * 1.5)  # 20% of image width
     logo_height = int(logo.height * (logo_width / logo.width) * 1.2)
     logo = logo.resize((logo_width, logo_height))
@@ -586,8 +469,7 @@ st.set_page_config(page_title="Dynamic ADs Generation", page_icon="🎨")
 
 st.header("Upload Logo in PNG")
 uploaded_logo = st.file_uploader("Upload a Logo file", type=["png"])
-processed_logo = process_logo_upload(uploaded_logo)
-if processed_logo:
+if uploaded_logo:
     tab1, tab2 = st.tabs(["🔣 Input", "🗃 Data"])
     
     with tab1:
@@ -637,7 +519,7 @@ if processed_logo:
                             
                             st.write("✨ Adding banner and branding...")
                             banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
-                            final_image = apply_tagline_and_logo(img, banner, processed_logo, logo_position="top_right")
+                            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
                             
                             st.write("✅ Finalizing advertisement...")
                             status.update(label="Advertisement generated successfully!", state="complete")
@@ -771,7 +653,7 @@ if processed_logo:
                                 # Process the data with parallel execution
                                 process_csv_data_with_parallel_progress(
                                     df.sample(batch_size), 
-                                    processed_logo,
+                                    uploaded_logo,
                                     num_workers=num_workers
                                 )
                         
