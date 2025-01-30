@@ -64,40 +64,43 @@ This tool is particularly useful for marketing teams, financial institutions, an
 ## **How It Works**
 ![Overview](Overview.drawio.png)
 ### **Flowchart**
-```plaintext
-+-------------------+
-|  User Input       |
-|  - Single Ad Form |
-|  - CSV Upload     |
-+-------------------+
-          |
-          v
-+-------------------+
-|  Validate Input   |
-|  - Check CSV Data |
-|  - Verify Fields  |
-+-------------------+
-          |
-          v
-+-------------------+
-|  Generate Images  |
-|  - AI Model       |
-|  - Parallel Jobs  |
-+-------------------+
-          |
-          v
-+-------------------+
-|  Add Branding     |
-|  - Logo           |
-|  - Tagline        |
-+-------------------+
-          |
-          v
-+-------------------+
-|  Display & Save   |
-|  - Grid Layout    |
-|  - Download Buttons
-+-------------------+
+```mermaid
+---
+config:
+  look: classic
+  theme: Neo
+  themeVariables:
+    fontSize: 18px
+    fontFamily: Helvetica
+---
+flowchart TB
+    Start[Upload Logo PNG] -->|PNG Image File| Mode{Choose Mode}
+    Mode -->|User Selection| SingleGen[Single Ad Generation]
+    Mode -->|User Selection| BulkGen[Bulk Ad Generation]
+    subgraph "Ad Generation"
+        subgraph "Single Image"
+            SingleGen -->|Form Data| InputForm[Collect Input Parameters]
+            InputForm -->|Age, Gender, Location, Product, Profession| SaveGenImage[save_genimage]
+            SaveGenImage -->|Base Image & Caption| ApplyTagAndLogo[create banner]
+            %% CreateBanner -->|Image with Banner| ApplyTagAndLogo[apply_tagline_and_logo]
+        end
+        subgraph "Bulk Generation Process"
+            BulkGen -->|CSV File| UploadCSV[Upload & Validate CSV]
+            UploadCSV -->|Validated Dataset| SetWorkers[Set Workers & Batch Size]
+            SetWorkers -->|Worker Count & Batch Size| ProcessCSV[process_csv_data_with_parallel_progress]
+            ProcessCSV -->|Row Data| ProcessSingle[process single image]
+            ProcessSingle -->|Parameters| SaveGenImage
+        end
+    end    
+    subgraph "apply tagline and logo Function"
+        ApplyTagAndLogo -->|Uploaded Logo & Created Banner| ResizeLogo[Resize Logo]
+        ResizeLogo -->|Resized Logo| PositionLogo[Calculate & Apply Logo Position]
+        PositionLogo -->|Image with Logo| DetectFaces[Detect Faces]
+        DetectFaces -->|Face Locations| CalcTagline[Randomly Pick Tagline & Get Position]
+        CalcTagline -->|Position Data| AddTagline[Add Tagline & Paste Banner]
+        AddTagline -->|PNG File| Download[Download Option]
+    end
+
 ```
 
 
