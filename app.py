@@ -120,7 +120,7 @@ def save_genimage(product, age, location, income, gender, profession):
         product = 'gold jewellery'
     elif product.lower() == 'personal':
         product = 'vacation'
-    system_prompt = f"{age}-year-old {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, sharp focus, beside person.\
+    system_prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, sharp focus, beside person.\
     Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
     try:
         image = client.text_to_image(system_prompt)
