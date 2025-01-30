@@ -126,7 +126,7 @@ def save_genimage(product, age, location, income, gender, profession):
         image = client.text_to_image(system_prompt)
     except Exception as e:
         raise st.error(f"Error Generating Image: {str(e)}")
-    caption = " ".join(system_prompt.split()[:6])
+    caption = " ".join(system_prompt.split()[:7])
     return image, caption
 
 def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
