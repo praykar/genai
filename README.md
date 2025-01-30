@@ -10,9 +10,9 @@ pinned: false
 license: apache-2.0
 short_description: Generate ads
 ---
-
-Check out 1. https://huggingface.co/spaces/pray-kar/adimagen
-2. https://adimagen.streamlit.app/
+# **Check out**
+- https://huggingface.co/spaces/pray-kar/adimagen
+- https://adimagen.streamlit.app/
 ---
 # **Dynamic Advertisement Generator**
 
