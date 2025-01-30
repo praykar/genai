@@ -11,7 +11,8 @@ license: apache-2.0
 short_description: Generate ads
 ---
 
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+Check out 1. https://huggingface.co/spaces/pray-kar/adimagen
+2. https://adimagen.streamlit.app/
 ---
 # **Dynamic Advertisement Generator**
 
@@ -61,7 +62,7 @@ This tool is particularly useful for marketing teams, financial institutions, an
 ---
 
 ## **How It Works**
-
+![Overview](Overview.drawio.png)
 ### **Flowchart**
 ```plaintext
 +-------------------+
