@@ -129,7 +129,7 @@ def create_banner(product, width=1200, height=120):
 
     draw.text((disclaimer_text_x, disclaimer_text_y), disclaimer_text, fill='white', font=disclaimer_font, stroke_width=0.4, stroke_fill='white')
 
-    return image, texts[-1:]
+    return image, texts[-1:][0]
 
 def detect_faces(image):
     face_locations = face_recognition.face_locations(np.array(image), model="hog")
@@ -368,13 +368,6 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
             return False
             
         try:
-            # Add staggered delay based on index
-            initial_delay = 3  # Initial delay in seconds
-            delay = initial_delay * (index % num_workers)  # Stagger based on worker number
-            time.sleep(delay)
-            
-            status_text.text(f"Starting generation for image {index + 1}...")
-            
             # Generate image
             img, caption = save_genimage(
                 row['Product'], 
@@ -385,12 +378,9 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                 row['job']
             )
             
-            # Small delay before banner creation
-            time.sleep(1)
-            
             # Create and apply banner and logo
-            banner, tagline = create_banner(row['Product'], width=int(img.width), height=int(img.height * 0.08))
-            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, tagline, logo_position="top_right")
+            banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
+            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
             
             # Send progress update
             message_queue.put(Message(
@@ -410,7 +400,7 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                     type=MessageType.ERROR,
                     data={'index': index, 'error': "MODEL_BUSY"}
                 ))
-                stop_processing.set()
+                stop_processing.set()  # Signal all threads to stop
             else:
                 message_queue.put(Message(
                     type=MessageType.ERROR,
@@ -452,28 +442,6 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                     completed += 1
                     progress_bar.progress(completed / total_rows)
                     status_text.text(f"Generated {completed} of {total_rows} images")
-                    
-                    # Display the generated image immediately
-                    index = message.data['index']
-                    if index in generated_images:
-                        with image_placeholders[index]:
-                            img, caption = generated_images[index]
-                            st.image(img, caption=f"Image {index + 1}", use_container_width=True)
-                            st.caption(caption)
-                            
-                            # Add download button
-                            buf = io.BytesIO()
-                            img.save(buf, format="PNG")
-                            byte_im = buf.getvalue()
-                            
-                            st.download_button(
-                                label=f"Download Image {index + 1}",
-                                data=byte_im,
-                                file_name=f"ad_{index + 1}.png",
-                                mime="image/png",
-                                use_container_width=True,
-                                key=f"download_{index}"
-                            )
                 
             except queue.Empty:
                 continue
@@ -481,6 +449,26 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
         # Wait for all futures to complete
         for future in futures:
             future.result()  # Ensure all futures are done
+        
+        # Display all images at once
+        for index, (img, caption) in generated_images.items():
+            with image_placeholders[index]:
+                st.image(img, caption=f"Image {index + 1}", use_container_width=True)
+                st.caption(caption)
+                
+                # Add download button for each image
+                buf = io.BytesIO()
+                img.save(buf, format="PNG")
+                byte_im = buf.getvalue()
+                
+                st.download_button(
+                    label=f"Download Image {index + 1}",
+                    data=byte_im,
+                    file_name=f"ad_{index + 1}.png",
+                    mime="image/png",
+                    use_container_width=True,
+                    key=f"download_{index}"
+                )
                 
     # Only show completion message if we didn't stop due to error
     if not stop_processing.is_set():
