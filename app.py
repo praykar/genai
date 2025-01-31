@@ -38,7 +38,7 @@ def load_font(font_path, font_size):
         font = default_font.font_variant(size=font_size)
     return font
 
-def create_banner(width=1200, height=120):
+def create_banner(product, width=1200, height=120):
     image = Image.new('RGBA', (width, height), (0, 0, 0, 0))
 
     background = Image.new('RGBA', (width, height), (242, 101, 34, 255))
@@ -47,14 +47,37 @@ def create_banner(width=1200, height=120):
     draw = ImageDraw.Draw(image)
     font_size = image.height * 0.25 
     font = load_font("Helvetica.ttc", font_size)
+    client = InferenceClient(
+        provider="hf-inference",
+        api_key= KEY
+    )
+    
+    messages = [
+        {
+            "role": "system", 
+            "content": "You are an experienced marketing manager."
+        },
+        {
+            "role": "user",
+            "content": f"Include the word {product.split()[0]} & Generate 10, tagline in not more than 4 words for {product.split()[0]} loan ad"
+        }
+    ]
+    
+    completion = client.chat.completions.create(
+        model="mistralai/Mistral-7B-Instruct-v0.3", 
+        messages=messages, 
+        max_tokens=500
+    )
+    text = completion.choices[0].message.content
+    taglines = re.findall(r'^\d+\.\s+(.*)$', text, flags=re.MULTILINE)
 
-    texts = ["Low Interest Rates",'|', "Hassle Free process",'|', "Flexible tenure"]
+    texts = random.sample(taglines, 4)        
 
     box_height = int(height * 0.4)
     box_width = int(width / len(texts))
     spacing = (width - (box_width * len(texts))) // len(texts) + 1
 
-    for i, text in enumerate(texts):
+    for i, text in enumerate(texts[:3]):
         x1 = spacing + (i * (box_width + spacing))
         y1 = int(height * 0.02)
 
@@ -108,7 +131,7 @@ def create_banner(width=1200, height=120):
 
     draw.text((disclaimer_text_x, disclaimer_text_y), disclaimer_text, fill='white', font=disclaimer_font, stroke_width=0.4, stroke_fill='white')
 
-    return image
+    return image, text[-1:]
 
 def detect_faces(image):
     face_locations = face_recognition.face_locations(np.array(image), model="hog")
@@ -130,7 +153,7 @@ def save_genimage(product, age, location, income, gender, profession):
     caption = " ".join(system_prompt.split()[1:23])
     return image, caption
 
-def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
+def apply_tagline_and_logo(img, banner, uploaded_logo, tagline, logo_position="top_left"):
     """
     Adds a logo and a tagline to the image and the banner.
     The logo is placed according to the `logo_position` argument.
@@ -181,14 +204,14 @@ def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left")
     draw = ImageDraw.Draw(new_image)
     
     # Randomly choose a tagline
-    taglines = [
-        "Dreams Within Reach", "Empowering Your Goals", "Finance Your Future", 
-        "Simplify Your Tomorrow", "Loans Made Easy", "Borrow With Confidence", 
-        "Unlock New Possibilities", "Invest In You", "Quick, Easy Loans", 
-        "Grow Your Potential", "Solutions That Empower", "Seamless Loan Experience", 
-        "Secure Your Dreams", "Freedom Through Finance", "Achieve More Today"
-    ]
-    tagline = random.choice(taglines)
+    # taglines = [
+    #     "Dreams Within Reach", "Empowering Your Goals", "Finance Your Future", 
+    #     "Simplify Your Tomorrow", "Loans Made Easy", "Borrow With Confidence", 
+    #     "Unlock New Possibilities", "Invest In You", "Quick, Easy Loans", 
+    #     "Grow Your Potential", "Solutions That Empower", "Seamless Loan Experience", 
+    #     "Secure Your Dreams", "Freedom Through Finance", "Achieve More Today"
+    # ]
+    # tagline = random.choice(taglines)
     font = load_font("Helvetica.ttc", banner_height * 0.6)
     margin = 40
     # # Get text size for positioning
@@ -252,13 +275,6 @@ def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left")
         draw.text((text_x, text_y2), tagline_line2, fill='#f26522', font=font, stroke_width=1, stroke_fill=outline_color)
 
     return new_image
-
-def process_image_for_row(row, uploaded_logo):
-    img, caption = save_genimage(row['Product'], row['age'], row['location'], 0, row['gender'], row['job'])
-    width, height = img.size
-    banner = create_banner(width=width, height=int(img.height * 0.08))
-    image_with_tagline_and_logo = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
-    return image_with_tagline_and_logo, caption
 
 def validate_csv_data(df):
     """Validate the CSV data format and content"""
@@ -365,8 +381,8 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
             )
             
             # Create and apply banner and logo
-            banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
-            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
+            banner, tagline = create_banner(row['Product'], width=int(img.width), height=int(img.height * 0.08))
+            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, tagline, logo_position="top_right")
             
             # Send progress update
             message_queue.put(Message(
@@ -519,8 +535,8 @@ if uploaded_logo:
                             img, caption = save_genimage(product, age, location, 0, gender, profession)
                             
                             st.write("✨ Adding banner and branding...")
-                            banner = create_banner(width=int(img.width), height=int(img.height * 0.08))
-                            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_right")
+                            banner, tagline = create_banner(product, width=int(img.width), height=int(img.height * 0.08))
+                            final_image = apply_tagline_and_logo(img, banner, uploaded_logo, tagline, logo_position="top_right")
                             
                             st.write("✅ Finalizing advertisement...")
                             status.update(label="Advertisement generated successfully!", state="complete")
