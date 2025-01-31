@@ -71,7 +71,7 @@ class AdGenerator:
         spacing = (width - (box_width * len(texts))) // len(texts) + 1
 
         for i, text in enumerate(texts):
-            x1 = spacing + (box_width + spacing)
+            x1 = spacing + (i * (box_width + spacing))
             y1 = int(height * 0.02)
             
             text_bbox = draw.textbbox((0, 0), text, font=font)
@@ -88,33 +88,16 @@ class AdGenerator:
         """Add social media section to banner"""
         follow_text = "Follow us on:"
         follow_font_size = int(font_size * 0.85)
-        follow_font = load_font("Helvetica.ttc", follow_font_size)
-    
+        follow_font = self.load_font("Helvetica.ttc", follow_font_size)
+        
         follow_text_bbox = draw.textbbox((0, 0), follow_text, font=follow_font)
         follow_text_width = follow_text_bbox[2] - follow_text_bbox[0]
-    
-        icon_paths = ["facebook.png", "twitter.png", "instagram.png", "linkedin.png", "youtube.png", "whatsapp.png"]
-        icons = []
-        for path in icon_paths:
-            if os.path.exists(path):
-                icon = Image.open(path)
-                if icon.mode != 'RGBA':
-                    icon = icon.convert('RGBA')
-                icons.append(icon)
-    
+        
         follow_text_x = int((width) - (follow_text_width * 2.8))
         follow_text_y = int(height * 0.55)
-        icon_size = int(follow_font_size*1.2)
-        icons = [icon.resize((icon_size, icon_size)) for icon in icons]
-    
-        icon_x = follow_text_x + follow_text_width + 5
-        icon_y = follow_text_y + (follow_font_size - icon_size) // 2
-    
-        for icon in icons:
-            image.paste(icon, (int(icon_x), int(icon_y)), icon)
-            icon_x += icon.width + 10
-    
-        draw.text((follow_text_x, follow_text_y), follow_text, fill='white', font=follow_font, stroke_width=0.2, stroke_fill='white')
+        
+        draw.text((follow_text_x, follow_text_y), follow_text, 
+                 fill='white', font=follow_font, stroke_width=0.2, stroke_fill='white')
 
     def _add_disclaimer(self, draw, width, height, font_size):
         """Add disclaimer text to banner"""
@@ -138,13 +121,13 @@ class AdGenerator:
         elif product.lower() == 'personal':
             product = 'vacation'
             
-        prompt = f'''A {product} with absolutely no text, logos, or branding, positioned dominantly in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}, India. 
-        Natural daylight bathes the scene in warm, golden tones with soft shadows, capturing a candid lifestyle moment. Clean mid-shot composition, cinematic framing, and hyper-realistic details emphasize the pristine, 
-        brand-free product alongside the person. No text or graphics appear anywhere in the image, ensuring a pure focus on the product’s design and the authentic human connection.'''
+        prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
+                f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
+                f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
         
         try:
             image = client.text_to_image(prompt)
-            caption = " ".join(prompt.split()[1:24])
+            caption = " ".join(prompt.split()[:7])
             return image, caption
         except Exception as e:
             raise Exception(f"Error generating image: {str(e)}")
@@ -455,7 +438,7 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                                 num_cols = 2
                                 
                                 with grid_container:
-                                    st.markdown("### Generated Advertisements")
+                                    st.markdown("### Generating Advertisements")
                                     num_rows = (batch_size + num_cols - 1) // num_cols
                                     image_placeholders = {}
                                     
@@ -511,7 +494,7 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                                                 # Display image
                                                 with image_placeholders[idx]:
                                                     st.image(message.data['image'],
-                                                            caption= message.data['caption'],
+                                                            caption=f"Image {idx + 1}",
                                                             use_container_width=True)
                                                     
                                                     # Add download button
