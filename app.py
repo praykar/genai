@@ -120,9 +120,9 @@ def save_genimage(product, age, location, income, gender, profession):
         product = 'gold jewellery'
     elif product.lower() == 'personal':
         product = 'vacation'
-    system_prompt = f'''A {product} with a subtly concealed logo, positioned prominently in the foreground under sharp focus, adjacent to a {age}-year-old joyful {gender} {profession} in {location},
-    India. Natural daylight illuminates the scene with warm tones and soft shadows, highlighting a candid lifestyle moment. Clean mid-shot composition, cinematic framing, 
-    and realistic details emphasize the product's presence alongside the person, with no text and a harmonious blend of environment and subject.'''    
+    system_prompt = f'''A {product} with absolutely no text, logos, or branding, positioned dominantly in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location},
+    India. Natural daylight bathes the scene in warm, golden tones with soft shadows, capturing a candid lifestyle moment. Clean mid-shot composition, cinematic framing, and hyper-realistic details emphasize the pristine,
+    brand-free product alongside the person. No text or graphics appear anywhere in the image, ensuring a pure focus on the product’s design and the authentic human connection.'''    
     try:
         image = client.text_to_image(system_prompt)
     except Exception as e:
