@@ -76,7 +76,7 @@ def create_banner(product, width=1200, height=120):
     spacing = (width - (box_width * len(texts))) // len(texts) + 1
 
     for i, text in enumerate(texts[:3]):
-        x1 = spacing + (i * (box_width + spacing))
+        x1 = spacing + box_width + spacing
         y1 = int(height * 0.02)
 
         text_bbox = draw.textbbox((0, 0), text, font=font)
