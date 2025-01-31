@@ -315,31 +315,40 @@ def calculate_optimal_workers(total_images):
         return 8  # Maximum workers to avoid API rate limits
         
 def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=None):
-    # Reset DataFrame index
+    # Reset DataFrame index to ensure continuous integers starting from 0
     data = data.reset_index(drop=True)
     
-    # Limit number of workers to prevent overwhelming the API
+    # Set number of workers
     total_rows = len(data)
-    num_workers = min(2, total_rows)  # Limit to 2 workers maximum
+    if num_workers is None:
+        num_workers = calculate_optimal_workers(total_rows)
+    # Ensure num_workers doesn't exceed total rows
+    num_workers = min(num_workers, total_rows)
     
     # Create communication queue
     message_queue = queue.Queue()
     
-    # Create UI placeholders
+    # Create UI placeholders for progress tracking
     progress_container = st.container()
     with progress_container:
         progress_bar = st.progress(0)
         status_text = st.empty()
         worker_info = st.empty()
     
-    worker_info.info(f"Processing {total_rows} images with {num_workers} worker(s)")
+    # Display worker information
+    worker_info.info(f"Processing {total_rows} images with {num_workers} parallel workers")
     
-    # Create grid layout
+    # Create grid layout container
     grid_container = st.container()
-    num_cols = 2
+    
+    # Configure grid layout
+    num_cols = 2  # Number of columns in the grid
     with grid_container:
         st.markdown("### Generated Advertisements")
+        # Calculate number of rows needed
         num_rows = (total_rows + num_cols - 1) // num_cols
+        
+        # Create grid layout
         image_placeholders = {}
         for row in range(num_rows):
             cols = st.columns(num_cols)
@@ -348,21 +357,25 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                 if idx < total_rows:
                     image_placeholders[idx] = cols[col]
     
+    # Flag to track if we should stop processing
     stop_processing = threading.Event()
+    
+    # Dictionary to store all generated images and captions
     generated_images = {}
-    failed_indices = set()
     
     def process_single_image(index, row):
         if stop_processing.is_set():
             return False
             
         try:
-            # Add mandatory delay between API calls
-            time.sleep(2)  # 2 second delay between requests
+            # Add staggered delay based on index
+            initial_delay = 3  # Initial delay in seconds
+            delay = initial_delay * (index % num_workers)  # Stagger based on worker number
+            time.sleep(delay)
             
-            status_text.text(f"Generating image {index + 1} of {total_rows}")
+            status_text.text(f"Starting generation for image {index + 1}...")
             
-            # Generate base image
+            # Generate image
             img, caption = save_genimage(
                 row['Product'], 
                 row['age'], 
@@ -372,18 +385,21 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                 row['job']
             )
             
-            # Add mandatory delay before banner creation
+            # Small delay before banner creation
             time.sleep(1)
             
-            # Create banner and apply logo
+            # Create and apply banner and logo
             banner, tagline = create_banner(row['Product'], width=int(img.width), height=int(img.height * 0.08))
             final_image = apply_tagline_and_logo(img, banner, uploaded_logo, tagline, logo_position="top_right")
             
             # Send progress update
             message_queue.put(Message(
                 type=MessageType.PROGRESS,
-                data={'index': index, 'image': final_image, 'caption': caption}
+                data={'index': index}
             ))
+            
+            # Store the generated image and caption
+            generated_images[index] = (final_image, caption)
             
             return True
             
@@ -394,93 +410,86 @@ def process_csv_data_with_parallel_progress(data, uploaded_logo, num_workers=Non
                     type=MessageType.ERROR,
                     data={'index': index, 'error': "MODEL_BUSY"}
                 ))
-                failed_indices.add(index)
-                time.sleep(5)  # Wait 5 seconds before retrying
+                stop_processing.set()
             else:
                 message_queue.put(Message(
                     type=MessageType.ERROR,
                     data={'index': index, 'error': str(e)}
                 ))
-                failed_indices.add(index)
             return False
 
-    def process_batch(indices):
-        with ThreadPoolExecutor(max_workers=num_workers) as executor:
-            futures = {
-                executor.submit(process_single_image, idx, data.iloc[idx]): idx
-                for idx in indices
-            }
-            
-            for future in futures:
-                try:
-                    future.result(timeout=60)  # 60 second timeout per image
-                except Exception:
-                    idx = futures[future]
-                    failed_indices.add(idx)
-
-    # Process images in smaller batches
-    batch_size = 2  # Process 2 images at a time
-    for batch_start in range(0, total_rows, batch_size):
-        if stop_processing.is_set():
-            break
-            
-        batch_indices = range(batch_start, min(batch_start + batch_size, total_rows))
-        process_batch(batch_indices)
+    # Start processing in parallel
+    with ThreadPoolExecutor(max_workers=num_workers) as executor:
+        # Submit all tasks
+        futures = [
+            executor.submit(process_single_image, idx, row)
+            for idx, row in data.iterrows()
+        ]
         
-        # Process messages from queue
-        while not message_queue.empty():
+        # Initialize tracking variables
+        completed = 0
+        
+        # Process messages from queue until all tasks are complete or stop signal
+        while (not all(future.done() for future in futures) or not message_queue.empty()) and not stop_processing.is_set():
             try:
-                message = message_queue.get_nowait()
+                message = message_queue.get(timeout=0.1)
                 
-                if message.type == MessageType.PROGRESS:
-                    idx = message.data['index']
-                    generated_images[idx] = (message.data['image'], message.data['caption'])
-                    progress_bar.progress(len(generated_images) / total_rows)
+                if message.type == MessageType.ERROR and message.data['error'] == "MODEL_BUSY":
+                    # Cancel all pending futures
+                    for future in futures:
+                        future.cancel()
                     
-                    # Display image immediately
-                    with image_placeholders[idx]:
-                        img, caption = generated_images[idx]
-                        st.image(img, caption=f"Image {idx + 1}", use_container_width=True)
-                        st.caption(caption)
-                        
-                        # Add download button
-                        buf = io.BytesIO()
-                        img.save(buf, format="PNG")
-                        byte_im = buf.getvalue()
-                        
-                        st.download_button(
-                            label=f"Download Image {idx + 1}",
-                            data=byte_im,
-                            file_name=f"ad_{idx + 1}.png",
-                            mime="image/png",
-                            use_container_width=True,
-                            key=f"download_{idx}"
-                        )
+                    # Clean up UI elements
+                    worker_info.empty()
+                    status_text.empty()
+                    progress_bar.empty()
+                    
+                    # Show error message
+                    st.error("Model too busy for process. Please try again later.")
+                    return  # Exit the function immediately
+                    
+                elif message.type == MessageType.PROGRESS:
+                    completed += 1
+                    progress_bar.progress(completed / total_rows)
+                    status_text.text(f"Generated {completed} of {total_rows} images")
+                    
+                    # Display the generated image immediately
+                    index = message.data['index']
+                    if index in generated_images:
+                        with image_placeholders[index]:
+                            img, caption = generated_images[index]
+                            st.image(img, caption=f"Image {index + 1}", use_container_width=True)
+                            st.caption(caption)
+                            
+                            # Add download button
+                            buf = io.BytesIO()
+                            img.save(buf, format="PNG")
+                            byte_im = buf.getvalue()
+                            
+                            st.download_button(
+                                label=f"Download Image {index + 1}",
+                                data=byte_im,
+                                file_name=f"ad_{index + 1}.png",
+                                mime="image/png",
+                                use_container_width=True,
+                                key=f"download_{index}"
+                            )
                 
-                elif message.type == MessageType.ERROR:
-                    if message.data['error'] == "MODEL_BUSY":
-                        time.sleep(10)  # Wait longer if model is busy
-                    
             except queue.Empty:
-                break
+                continue
         
-        # Add delay between batches
-        time.sleep(5)
-    
-    # Show final status
-    worker_info.empty()
-    status_text.empty()
-    
-    if len(generated_images) == total_rows:
-        st.success(f"Successfully generated all {total_rows} images!")
-    else:
-        st.warning(f"Completed with {len(generated_images)} out of {total_rows} images generated.")
-        if failed_indices:
-            st.error(f"Failed to generate images for indices: {sorted(failed_indices)}")
-            if st.button("Retry Failed Images", use_container_width=True):
-                # Create new data frame with only failed rows
-                retry_data = data.iloc[list(failed_indices)]
-                process_csv_data_with_parallel_progress(retry_data, uploaded_logo, num_workers=1)
+        # Wait for all futures to complete
+        for future in futures:
+            future.result()  # Ensure all futures are done
+                
+    # Only show completion message if we didn't stop due to error
+    if not stop_processing.is_set():
+        worker_info.empty()
+        status_text.empty()
+        if completed == total_rows:
+            st.success(f"Successfully generated all {completed} images!")
+        else:
+            st.warning(f"Completed with {completed} out of {total_rows} images generated.")
         
 # Streamlit UI
 st.set_page_config(page_title="Dynamic ADs Generation", page_icon="🎨")
