@@ -47,10 +47,7 @@ def create_banner(product, width=1200, height=120):
     draw = ImageDraw.Draw(image)
     font_size = image.height * 0.25 
     font = load_font("Helvetica.ttc", font_size)
-    client = InferenceClient(
-        provider="hf-inference",
-        api_key= KEY
-    )
+    client2 = InferenceClient(provider="hf-inference", api_key= KEY)
     
     messages = [
         {
@@ -63,7 +60,7 @@ def create_banner(product, width=1200, height=120):
         }
     ]
     
-    completion = client.chat.completions.create(
+    completion = client2.chat.completions.create(
         model="mistralai/Mistral-7B-Instruct-v0.3", 
         messages=messages, 
         max_tokens=500
