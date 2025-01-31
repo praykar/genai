@@ -120,13 +120,14 @@ def save_genimage(product, age, location, income, gender, profession):
         product = 'gold jewellery'
     elif product.lower() == 'personal':
         product = 'vacation'
-    system_prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, sharp focus, beside person.\
-    Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
+    system_prompt = f'''A {product} with a subtly concealed logo, positioned prominently in the foreground under sharp focus, adjacent to a {age}-year-old joyful {gender} {profession} in {location},
+    India. Natural daylight illuminates the scene with warm tones and soft shadows, highlighting a candid lifestyle moment. Clean mid-shot composition, cinematic framing, 
+    and realistic details emphasize the product's presence alongside the person, with no text and a harmonious blend of environment and subject.'''    
     try:
         image = client.text_to_image(system_prompt)
     except Exception as e:
         raise st.error(f"Error Generating Image: {str(e)}")
-    caption = " ".join(system_prompt.split()[:7])
+    caption = " ".join(system_prompt.split()[1:23])
     return image, caption
 
 def apply_tagline_and_logo(img, banner, uploaded_logo, logo_position="top_left"):
