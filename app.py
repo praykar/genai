@@ -344,9 +344,8 @@ def create_streamlit_ui():
                                            placeholder="Enter city name")
                 
                 product = st.selectbox("Product Type",
-                                     options=["Home Loan", "Personal Loan", "Jewel Loan",
-                                             "Car Loan", "Education Loan", "Credit Card Loan"],
-                                     help="Select the type of financial product")
+                      options=list(generator.taglines.keys()),
+                      help="Select the type of financial product")
             
             # Generation container
             generation_container = st.container()
