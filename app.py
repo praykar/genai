@@ -223,152 +223,152 @@ class AdGenerator:
         return final_image
 
     def _add_tagline(self, image, product, original_height):
-    """Add tagline to the image with a translucent banner background"""
-    # Create a new RGBA layer for drawing
-    txt_layer = Image.new('RGBA', image.size, (255, 255, 255, 0))
-    draw = ImageDraw.Draw(txt_layer)
-    
-    # Standardize product name to match taglines dictionary keys
-    product_key = product.strip()
-    if product_key not in self.taglines:
-        raise ValueError(f"No taglines found for product: {product_key}")
+        """Add tagline to the image with a translucent banner background"""
+        # Create a new RGBA layer for drawing
+        txt_layer = Image.new('RGBA', image.size, (255, 255, 255, 0))
+        draw = ImageDraw.Draw(txt_layer)
         
-    tagline = random.choice(self.taglines[product_key])
-    font_size = int(original_height * 0.05)
-    font = self.load_font("Helvetica.ttc", font_size)
-    
-    faces = self.detect_faces(image)
-    if faces:
-        best_face = max(faces, key=lambda f: f['width'] * f['height'])
-        self._position_tagline_with_banner(draw, txt_layer, tagline, font, best_face, font_size)
-    else:
-        self._position_tagline_fallback(draw, txt_layer, tagline, font, font_size)
-    
-    # Blend the text layer with the original image
-    return Image.alpha_composite(image.convert('RGBA'), txt_layer)
+        # Standardize product name to match taglines dictionary keys
+        product_key = product.strip()
+        if product_key not in self.taglines:
+            raise ValueError(f"No taglines found for product: {product_key}")
+            
+        tagline = random.choice(self.taglines[product_key])
+        font_size = int(original_height * 0.05)
+        font = self.load_font("Helvetica.ttc", font_size)
+        
+        faces = self.detect_faces(image)
+        if faces:
+            best_face = max(faces, key=lambda f: f['width'] * f['height'])
+            self._position_tagline_with_banner(draw, txt_layer, tagline, font, best_face, font_size)
+        else:
+            self._position_tagline_fallback(draw, txt_layer, tagline, font, font_size)
+        
+        # Blend the text layer with the original image
+        return Image.alpha_composite(image.convert('RGBA'), txt_layer)
 
-def _position_tagline_fallback(self, draw, txt_layer, tagline, font, font_size):
-    """Position tagline when no faces are detected"""
-    words = tagline.split()
-    if len(words) > 4:
-        mid = len(words) // 2
-        lines = [' '.join(words[:mid]), ' '.join(words[mid:])]
-    else:
-        lines = [tagline]
-    
-    margin_top = int(txt_layer.height * 0.25)
-    line_spacing = int(font_size * 1.5)
-    padding = int(font_size * 0.5)  # Padding for banner
-    
-    # Calculate total banner dimensions
-    max_width = 0
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        width = bbox[2] - bbox[0]
-        max_width = max(max_width, width)
-    
-    banner_height = (len(lines) * line_spacing) + (padding * 2)
-    banner_width = max_width + (padding * 2)
-    
-    # Draw translucent banner
-    banner_x = (txt_layer.width - banner_width) // 2
-    banner_y = margin_top - padding
-    
-    # Create banner shape
-    banner_shape = [(banner_x, banner_y),
-                   (banner_x + banner_width, banner_y + banner_height)]
-    draw.rectangle(banner_shape, fill=(242, 101, 34, 128))  # Semi-transparent orange
-    
-    # Draw text
-    for i, line in enumerate(lines):
-        bbox = draw.textbbox((0, 0), line, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_x = (txt_layer.width - text_width) // 2
-        text_y = margin_top + (i * line_spacing)
+    def _position_tagline_fallback(self, draw, txt_layer, tagline, font, font_size):
+        """Position tagline when no faces are detected"""
+        words = tagline.split()
+        if len(words) > 4:
+            mid = len(words) // 2
+            lines = [' '.join(words[:mid]), ' '.join(words[mid:])]
+        else:
+            lines = [tagline]
+        
+        margin_top = int(txt_layer.height * 0.25)
+        line_spacing = int(font_size * 1.5)
+        padding = int(font_size * 0.5)  # Padding for banner
+        
+        # Calculate total banner dimensions
+        max_width = 0
+        for line in lines:
+            bbox = draw.textbbox((0, 0), line, font=font)
+            width = bbox[2] - bbox[0]
+            max_width = max(max_width, width)
+        
+        banner_height = (len(lines) * line_spacing) + (padding * 2)
+        banner_width = max_width + (padding * 2)
+        
+        # Draw translucent banner
+        banner_x = (txt_layer.width - banner_width) // 2
+        banner_y = margin_top - padding
+        
+        # Create banner shape
+        banner_shape = [(banner_x, banner_y),
+                       (banner_x + banner_width, banner_y + banner_height)]
+        draw.rectangle(banner_shape, fill=(242, 101, 34, 128))  # Semi-transparent orange
         
         # Draw text
-        draw.text(
-            (text_x, text_y),
-            line,
-            fill=(255, 255, 255, 255),  # White text
-            font=font
-        )
-
-def _position_tagline_with_banner(self, draw, txt_layer, tagline, font, face, font_size):
-    """Position tagline with banner avoiding face overlap"""
-    words = tagline.split()
-    if len(words) > 4:
-        mid = len(words) // 2
-        lines = [' '.join(words[:mid]), ' '.join(words[mid:])]
-    else:
-        lines = [tagline]
-    
-    margin_x = int(txt_layer.width * 0.05)
-    margin_y = int(txt_layer.height * 0.05)
-    line_spacing = int(font_size * 1.2)
-    padding = int(font_size * 0.5)  # Padding for banner
-    
-    # Calculate total text dimensions
-    max_width = 0
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font)
-        width = bbox[2] - bbox[0]
-        max_width = max(max_width, width)
-    
-    total_text_height = len(lines) * line_spacing
-    banner_height = total_text_height + (padding * 2)
-    banner_width = max_width + (padding * 2)
-    
-    # Define potential positions
-    positions = [
-        {
-            'y': max(margin_y, face['y'] - banner_height - margin_y),
-            'space': face['y'] - margin_y
-        },
-        {
-            'y': min(face['y'] + face['height'] + margin_y,
-                    txt_layer.height - banner_height - margin_y),
-            'space': txt_layer.height - (face['y'] + face['height'] + margin_y) - banner_height
-        }
-    ]
-    
-    best_position = max(positions, key=lambda p: p['space'])
-    banner_y = best_position['y']
-    
-    # Choose side with more space
-    left_space = face['x'] - margin_x
-    right_space = txt_layer.width - (face['x'] + face['width']) - margin_x
-    text_align = 'left' if left_space > right_space else 'right'
-    
-    # Calculate banner position
-    if text_align == 'left':
-        banner_x = margin_x
-    else:
-        banner_x = txt_layer.width - banner_width - margin_x
-    
-    # Draw translucent banner
-    banner_shape = [(banner_x, banner_y),
-                   (banner_x + banner_width, banner_y + banner_height)]
-    draw.rectangle(banner_shape, fill=(242, 101, 34, 128))  # Semi-transparent orange
-    
-    # Draw text
-    for i, line in enumerate(lines):
-        text_y = banner_y + padding + (i * line_spacing)
-        
-        if text_align == 'left':
-            text_x = margin_x + padding
-        else:
+        for i, line in enumerate(lines):
             bbox = draw.textbbox((0, 0), line, font=font)
             text_width = bbox[2] - bbox[0]
-            text_x = txt_layer.width - text_width - margin_x - padding
+            text_x = (txt_layer.width - text_width) // 2
+            text_y = margin_top + (i * line_spacing)
+            
+            # Draw text
+            draw.text(
+                (text_x, text_y),
+                line,
+                fill=(255, 255, 255, 255),  # White text
+                font=font
+            )
+
+    def _position_tagline_with_banner(self, draw, txt_layer, tagline, font, face, font_size):
+        """Position tagline with banner avoiding face overlap"""
+        words = tagline.split()
+        if len(words) > 4:
+            mid = len(words) // 2
+            lines = [' '.join(words[:mid]), ' '.join(words[mid:])]
+        else:
+            lines = [tagline]
+        
+        margin_x = int(txt_layer.width * 0.05)
+        margin_y = int(txt_layer.height * 0.05)
+        line_spacing = int(font_size * 1.2)
+        padding = int(font_size * 0.5)  # Padding for banner
+        
+        # Calculate total text dimensions
+        max_width = 0
+        for line in lines:
+            bbox = draw.textbbox((0, 0), line, font=font)
+            width = bbox[2] - bbox[0]
+            max_width = max(max_width, width)
+        
+        total_text_height = len(lines) * line_spacing
+        banner_height = total_text_height + (padding * 2)
+        banner_width = max_width + (padding * 2)
+        
+        # Define potential positions
+        positions = [
+            {
+                'y': max(margin_y, face['y'] - banner_height - margin_y),
+                'space': face['y'] - margin_y
+            },
+            {
+                'y': min(face['y'] + face['height'] + margin_y,
+                        txt_layer.height - banner_height - margin_y),
+                'space': txt_layer.height - (face['y'] + face['height'] + margin_y) - banner_height
+            }
+        ]
+        
+        best_position = max(positions, key=lambda p: p['space'])
+        banner_y = best_position['y']
+        
+        # Choose side with more space
+        left_space = face['x'] - margin_x
+        right_space = txt_layer.width - (face['x'] + face['width']) - margin_x
+        text_align = 'left' if left_space > right_space else 'right'
+        
+        # Calculate banner position
+        if text_align == 'left':
+            banner_x = margin_x
+        else:
+            banner_x = txt_layer.width - banner_width - margin_x
+        
+        # Draw translucent banner
+        banner_shape = [(banner_x, banner_y),
+                       (banner_x + banner_width, banner_y + banner_height)]
+        draw.rectangle(banner_shape, fill=(242, 101, 34, 128))  # Semi-transparent orange
         
         # Draw text
-        draw.text(
-            (text_x, text_y),
-            line,
-            fill=(255, 255, 255, 255),  # White text
-            font=font
-        )
+        for i, line in enumerate(lines):
+            text_y = banner_y + padding + (i * line_spacing)
+            
+            if text_align == 'left':
+                text_x = margin_x + padding
+            else:
+                bbox = draw.textbbox((0, 0), line, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_x = txt_layer.width - text_width - margin_x - padding
+            
+            # Draw text
+            draw.text(
+                (text_x, text_y),
+                line,
+                fill=(255, 255, 255, 255),  # White text
+                font=font
+            )
         
     def generate_advertisement(self, data, uploaded_logo, message_queue=None, index=None):
         """Generate a single advertisement"""
