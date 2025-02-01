@@ -153,10 +153,10 @@ class AdGenerator:
         product_mapping = {
             'jewel': 'gold loan',
             'jewel loan': 'gold loan',
-            'personal': 'home loan',
-            'personal loan': 'home loan',
-            'home': 'home loan',
-            'home loan': 'home loan'
+            'personal': 'house loan',
+            'personal loan': 'house loan',
+            'home': 'house loan',
+            'home loan': 'house loan'
         }
         
         # Convert to lowercase for case-insensitive matching
@@ -232,44 +232,93 @@ class AdGenerator:
         faces = self.detect_faces(image)
         if faces:
             best_face = max(faces, key=lambda f: f['width'] * f['height'])
-            self._position_tagline(draw, image.width, tagline, font, best_face)
+            self._position_tagline_with_spacing(draw, image, tagline, font, best_face, font_size)
 
-    def _position_tagline(self, draw, img_width, tagline, font, best_face):
-        """Position tagline relative to detected face"""
-        margin = 40
-        text_bbox = draw.textbbox((0, 0), tagline, font=font)
-        text_width = text_bbox[2] - text_bbox[0]
-        
-        # Split tagline if needed
+    def _position_tagline_with_spacing(self, draw, image, tagline, font, face, font_size):
+        """Position tagline avoiding face overlap"""
+        # Split tagline into words for better line breaking
         words = tagline.split()
-        if len(words) > 2:
-            tagline_line1 = ' '.join(words[:len(words)//2])
-            tagline_line2 = ' '.join(words[len(words)//2:])
-        else:
-            tagline_line1 = tagline
-            tagline_line2 = ""
-
-        # 2. Calculate text dimensions for each line
-        text_bbox1 = draw.textbbox((0, 0), tagline_line1, font=font)
-        text_width1 = text_bbox1[2] - text_bbox1[0]
-        text_height1 = text_bbox1[3] - text_bbox1[1]
-
-        text_bbox2 = draw.textbbox((0, 0), tagline_line2, font=font)
-        text_width2 = text_bbox2[2] - text_bbox2[0]
-
-        # 3. Choose side with more space
-        left_space = best_face['x'] - margin
-        right_space = img_width - (best_face['x'] + best_face['width']) - margin
-        text_x = margin if left_space > right_space else img_width - max(text_width1, text_width2) - margin
-
-        # 4. Calculate y-coordinates for each line
-        text_y1 = best_face['y'] + best_face['height'] // 2 - text_height1 - 5  # Above face, with spacing
-        text_y2 = best_face['y'] + best_face['height'] // 2 + 5  # Below face, with spacing
-
-        # 5. Draw text with outline
-        outline_color = '#f26522'
-        draw.text((text_x, text_y1), tagline_line1, fill='#f26522', font=font, stroke_width=1, stroke_fill=outline_color)
-        draw.text((text_x, text_y2), tagline_line2, fill='#f26522', font=font, stroke_width=1, stroke_fill=outline_color)
+        lines = []
+        current_line = []
+        
+        # Calculate safe margins
+        margin_x = int(image.width * 0.05)  # 5% of image width
+        margin_y = int(image.height * 0.05)  # 5% of image height
+        line_spacing = int(font_size * 1.2)  # 120% of font size
+        
+        # Group words into lines
+        for word in words:
+            current_line.append(word)
+            test_line = ' '.join(current_line)
+            bbox = draw.textbbox((0, 0), test_line, font=font)
+            if bbox[2] - bbox[0] > image.width - (2 * margin_x):
+                current_line.pop()
+                lines.append(' '.join(current_line))
+                current_line = [word]
+        if current_line:
+            lines.append(' '.join(current_line))
+        
+        # Calculate total text height
+        total_text_height = len(lines) * line_spacing
+        
+        # Define potential positions (above and below face)
+        positions = [
+            # Above face with margin
+            {
+                'y': max(margin_y, face['y'] - total_text_height - margin_y),
+                'space': face['y'] - margin_y
+            },
+            # Below face with margin
+            {
+                'y': min(face['y'] + face['height'] + margin_y, image.height - total_text_height - margin_y),
+                'space': image.height - (face['y'] + face['height'] + margin_y) - total_text_height
+            }
+        ]
+        
+        # Choose best position (one with most available space)
+        best_position = max(positions, key=lambda p: p['space'])
+        text_y = best_position['y']
+        
+        # Calculate horizontal position
+        left_space = face['x'] - margin_x
+        right_space = image.width - (face['x'] + face['width']) - margin_x
+        
+        # Choose side with more space
+        text_align = 'left' if left_space > right_space else 'right'
+        
+        # Draw each line
+        for i, line in enumerate(lines):
+            bbox = draw.textbbox((0, 0), line, font=font)
+            text_width = bbox[2] - bbox[0]
+            
+            if text_align == 'left':
+                text_x = margin_x
+            else:
+                text_x = image.width - text_width - margin_x
+            
+            current_y = text_y + (i * line_spacing)
+            
+            # Draw text with outline effect
+            outline_color = 'white'
+            outline_width = 3
+            
+            # Draw outline
+            for offset_x in range(-outline_width, outline_width + 1):
+                for offset_y in range(-outline_width, outline_width + 1):
+                    draw.text(
+                        (text_x + offset_x, current_y + offset_y),
+                        line,
+                        font=font,
+                        fill=outline_color
+                    )
+            
+            # Draw main text
+            draw.text(
+                (text_x, current_y),
+                line,
+                fill='#f26522',  # Orange color
+                font=font
+            )
 
     def generate_advertisement(self, data, uploaded_logo, message_queue=None, index=None):
         """Generate a single advertisement"""
