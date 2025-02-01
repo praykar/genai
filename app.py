@@ -31,13 +31,27 @@ class Message:
 
 class AdGenerator:
     def __init__(self):
-        self.taglines = [
-            "Dreams Within Reach", "Empowering Your Goals", "Finance Your Future",
-            "Simplify Your Tomorrow", "Loans Made Easy", "Borrow With Confidence",
-            "Unlock New Possibilities", "Invest In You", "Quick, Easy Loans",
-            "Grow Your Potential", "Solutions That Empower", "Seamless Loan Experience",
-            "Secure Your Dreams", "Freedom Through Finance", "Achieve More Today"
-        ]
+        # self.taglines = [
+        #     "Unlock your dreams, one loan at a time.", "Your goals, our priority—approved in minutes.", "Trust us to fund your tomorrow, today.",
+        #     "Build bigger with flexible loans, zero regrets.", "From aspirations to assets—we’ve got your back.", "Breathe easy. Borrow smarter. Live freely.",
+        #     "Loans that grow with you, not against you.", "Step forward confidently—your financial freedom starts here.", "Secure your future, one seamless loan at a time.",
+        #     "Fuel ambition. Expand possibilities. Repay comfortably.", "Your journey, our commitment—borrow with peace of mind.", "Tailored loans for life’s unpredictable adventures.",
+        #     "No hurdles, just hope—apply stress-free.", "Turn plans into action with a single yes.", "Empower progress. Own your path. We’ll fund it."
+        # ]
+        self.taglines = { 
+            "Home" : ["Turn keys to your dream home, stress-free.", "Build your forever, brick by brick.", "Your home, our promise—approved faster.",
+                            "From foundations to rooftops, we finance it all.", "Unlock the door to your future today."],
+            "Personal" : ["Life’s surprises? We’ve got you covered.", "Your plans, our priority—funds in minutes.", "Flexible loans for life’s unpredictable chapters.",
+                                "Need cash? Say goodbye to compromises.", "Dream bigger. Borrow smarter. Live freely."],
+            "Jewel" : ["Unlock cash, keep your treasures safe.", "Your gold’s value, instantly in your hands.", "Secure loans, no parting with your heirlooms.",
+                             "Turn jewels into liquidity, effortlessly.", "Value preserved, funds accessed—zero stress."],
+            "Car" : ["Drive home your dream car, today.", "Fuel your journey, one affordable EMI at a time.", "New wheels, simpler deals—approved fast.",
+                           "From commutes to adventures, we finance them all.", "Your road to ownership starts here."],
+            "Education" : ["Invest in tomorrow’s success, today.", "Your degree, our support—no boundaries.", "Learn fearlessly. We’ll handle the fees.",
+                                 "Education unlocked, future secured.", "Bright minds deserve brighter opportunities."],
+            "Credit Card" : ["Instant cash, just a swipe away.", "Turn credit into possibilities, effortlessly.", "Need liquidity? Your card’s got more power.",
+                                   "Flexible funds, zero collateral—just your limit.", "Unlock cash without emptying your wallet."]
+        }
 
     def load_font(self, font_path, font_size):
         try:
@@ -132,15 +146,15 @@ class AdGenerator:
 
     def generate_base_image(self, product, age, location, gender, profession):
         """Generate base image using AI model"""
-        if product.lower() == 'jewel':
-            product = 'gold jewellery'
-        elif product.lower() == 'personal':
-            product = 'vacation'
+        if product.lower() == 'jewel loan':
+            product = 'gold loan'
+        elif product.lower() == 'personal loan':
+            product = 'home loan'
             
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"A {product} with absolutely no text, logos, or branding, positioned dominantly in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}," \
+        prompt = f"A {product.split()[0]} with absolutely no text, logos, or branding, positioned dominantly in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}," \
                 f"India. Natural daylight bathes the scene in warm, golden tones with soft shadows, capturing a candid lifestyle moment. Clean mid-shot composition, cinematic framing," \
                 f"and hyper-realistic details emphasize the pristine, brand-free product alongside the person. No text or graphics appear anywhere in the image," \
                 f"ensuring a pure focus on the product’s design and the authentic human connection."
@@ -157,7 +171,7 @@ class AdGenerator:
         return [{'x': left, 'y': top, 'width': right - left, 'height': bottom - top} 
                 for top, right, bottom, left in face_locations]
 
-    def apply_branding(self, img, banner, uploaded_logo, logo_position="top_right"):
+    def apply_branding(self, img, banner, uploaded_logo, product, logo_position="top_right"):
         """Apply branding elements to the image"""
         # Process logo
         logo = Image.open(uploaded_logo)
@@ -188,20 +202,20 @@ class AdGenerator:
         final_image.paste(banner, (0, img.height))
         
         # Add tagline
-        self._add_tagline(final_image, img.height)
+        self._add_tagline(final_image, product, img.height)
         
         return final_image
 
-    def _add_tagline(self, image, original_height):
+    def _add_tagline(self, image, product, original_height):
         """Add tagline to the image"""
         draw = ImageDraw.Draw(image)
-        tagline = random.choice(self.taglines)
+        tagline = f"{random.choice(self.taglines[product])}"
         font = self.load_font("Helvetica.ttc", int(original_height * 0.05))
         
         faces = self.detect_faces(image)
         if faces:
             best_face = max(faces, key=lambda f: f['width'] * f['height'])
-                self._position_tagline(draw, image.width, tagline, font, best_face)
+            self._position_tagline(draw, image.width, tagline, font, best_face)
 
     def _position_tagline(self, draw, width, tagline, font, face):
         """Position tagline relative to detected face"""
@@ -255,7 +269,7 @@ class AdGenerator:
             
             # Create banner and apply branding
             banner = self.create_banner(width=int(img.width), height=int(img.height * 0.08))
-            final_image = self.apply_branding(img, banner, uploaded_logo)
+            final_image = self.apply_branding(img, banner, uploaded_logo, data['Product'])
             
             # Report progress if in batch mode
             if message_queue and index is not None:
@@ -313,8 +327,8 @@ def create_streamlit_ui():
                                            placeholder="Enter city name")
                 
                 product = st.selectbox("Product Type",
-                                     options=["Home", "Personal", "Jewel",
-                                             "Car", "Education", "Credit Card"],
+                                     options=["Home Loan", "Personal Loan", "Jewel Loan",
+                                             "Car Loan", "Education Loan", "Credit Card Loan"],
                                      help="Select the type of financial product")
             
             # Generation container
