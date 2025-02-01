@@ -300,7 +300,7 @@ class AdGenerator:
             current_y = text_y + (i * line_spacing)
             
             # Draw text with outline effect
-            outline_color = 'white'
+            outline_color = '#f26522'
             outline_width = 3
             
             # Draw outline
