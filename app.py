@@ -227,7 +227,8 @@ class AdGenerator:
             raise ValueError(f"No taglines found for product: {product_key}")
             
         tagline = random.choice(self.taglines[product_key])
-        font = self.load_font("Helvetica.ttc", int(original_height * 0.05))
+        font_size = int(original_height * 0.05)
+        font = self.load_font("Helvetica.ttc", font_size)
         
         faces = self.detect_faces(image)
         if faces:
