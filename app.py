@@ -367,24 +367,24 @@ def create_streamlit_ui():
                                 status.update(label="Advertisement generated successfully!", state="complete")
                                 
                                 # Show the generated image
-                                with st.expander("Generated Advertisement", expanded=True):
-                                    st.image(final_image, caption=caption, use_container_width=True)
-                                    
-                                    # Add download button
-                                    buf = io.BytesIO()
-                                    final_image.save(buf, format="PNG")
-                                    byte_im = buf.getvalue()
-                                    
-                                    st.download_button(
-                                        label="Download Advertisement",
-                                        data=byte_im,
-                                        file_name=f"ad_{product.lower().replace(' ', '_')}.png",
-                                        mime="image/png",
-                                        use_container_width=True
-                                    )
-                                    
-                                    if st.button("Generate Another Version", use_container_width=True):
-                                        st.rerun()
+                                st.subheader("Generated Advertisement")
+                                st.image(final_image, caption=caption, use_container_width=True)
+                                
+                                # Add download button
+                                buf = io.BytesIO()
+                                final_image.save(buf, format="PNG")
+                                byte_im = buf.getvalue()
+                                
+                                st.download_button(
+                                    label="Download Advertisement",
+                                    data=byte_im,
+                                    file_name=f"ad_{product.lower().replace(' ', '_')}.png",
+                                    mime="image/png",
+                                    use_container_width=True
+                                )
+                                
+                                if st.button("Generate Another Version", use_container_width=True):
+                                    st.rerun()
                         
                         except Exception as e:
                             st.error(f"Error generating image: {str(e)}")
@@ -392,20 +392,21 @@ def create_streamlit_ui():
                     else:
                         st.error("Please fill in all fields before generating the advertisement.")
             
-            # Tips section
-            with st.expander("Tips for Better Results"):
-                st.markdown("""
-                ### 👉 Tips for Better Results:
-                1. **Age**: Choose an age that matches your target demographic
-                2. **Profession**: Be specific with professions (e.g., 'Senior Software Engineer' instead of just 'Engineer')
-                3. **Location**: Using major cities tends to give better results
-                4. **Gender**: Select the gender that best represents your target audience
-                
-                ### 🎯 Best Practices:
-                - Ensure your logo is clear and high-quality
-                - Consider the target audience for your financial product
-                - Test different combinations for optimal results
-                """)
+            # Tips section moved outside generation container
+            st.divider()
+            st.subheader("Tips for Better Results")
+            st.markdown("""
+            ### 👉 Optimization Tips:
+            1. **Age**: Choose an age that matches your target demographic
+            2. **Profession**: Be specific with professions (e.g., 'Senior Software Engineer' instead of just 'Engineer')
+            3. **Location**: Using major cities tends to give better results
+            4. **Gender**: Select the gender that best represents your target audience
+            
+            ### 🎯 Best Practices:
+            - Ensure your logo is clear and high-quality
+            - Consider the target audience for your financial product
+            - Test different combinations for optimal results
+            """)
         
         with tab2:
             st.header("Generate Bulk Advertisements")
@@ -420,19 +421,19 @@ def create_streamlit_ui():
                     help="Upload a CSV file with columns: Product, age, gender, job, location"
                 )
                 
-                # Show sample format
-                with st.expander("View CSV Format"):
-                    st.markdown("""
-                    Your CSV should have the following columns:
-                    - Product: Type of financial product
-                    - age: Age of target customer (18-100)
-                    - gender: Male/Female
-                    - job: Customer profession
-                    - location: City name
-                    """)
-                    
-                    st.markdown("**Sample Data:**")
-                    st.code("""Product,age,gender,job,location
+                # CSV format info
+                st.subheader("CSV Format Guide")
+                st.markdown("""
+                Your CSV should have the following columns:
+                - Product: Type of financial product
+                - age: Age of target customer (18-100)
+                - gender: Male/Female
+                - job: Customer profession
+                - location: City name
+                """)
+                
+                st.markdown("**Sample Data:**")
+                st.code("""Product,age,gender,job,location
 Home Loan,35,Male,Software Engineer,Mumbai
 Personal Loan,28,Female,Doctor,Delhi
 Business Loan,45,Male,Entrepreneur,Bangalore""")
@@ -442,13 +443,13 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                 try:
                     df = pd.read_csv(uploaded_file)
                     with col2:
-                        st.write("Data Preview:")
+                        st.subheader("Data Preview")
                         st.dataframe(df.head(3), use_container_width=True)
                         
-                        with st.expander("Data Summary"):
-                            st.write(f"Total Rows: {len(df)}")
-                            st.write("Product Distribution:")
-                            st.dataframe(df['Product'].value_counts().head(), use_container_width=True)
+                        st.subheader("Data Summary")
+                        st.write(f"Total Rows: {len(df)}")
+                        st.write("Product Distribution:")
+                        st.dataframe(df['Product'].value_counts().head(), use_container_width=True)
                 except Exception as e:
                     st.error(f"Error reading CSV file: {str(e)}")
             
@@ -463,8 +464,8 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                         num_workers = st.slider(
                             "Number of Parallel Workers",
                             min_value=1,
-                            max_value=min(3, len(df)),
-                            value=min(2, len(df)),
+                            max_value=min(8, len(df)),
+                            value=min(4, len(df)),
                             help="Adjust the number of parallel processes for image generation"
                         )
                     
