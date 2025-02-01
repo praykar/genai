@@ -247,8 +247,8 @@ class AdGenerator:
         # Split tagline if needed
         words = tagline.split()
         if len(words) > 2:
-            line1 = ' '.join(words[:len(words)//2])
-            line2 = ' '.join(words[len(words)//2:])
+            tagline_line1 = ' '.join(words[:len(words)//2])
+            tagline_line2 = ' '.join(words[len(words)//2:])
         else:
             tagline_line1 = tagline
             tagline_line2 = ""
