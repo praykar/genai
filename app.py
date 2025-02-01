@@ -172,7 +172,8 @@ class AdGenerator:
                 f"ensuring a pure focus on the product’s design and the authentic human connection."
         try:
             image = client.text_to_image(prompt)
-            caption = f"{product}: {age}-year {gender} {profession}, {location}" 
+            caption = prompt
+            #caption = f"{prompt_product.split()[0]}: {age}-year {gender} {profession}, {location}" 
             return image, caption
         except Exception as e:
             raise Exception(f"Error generating image: {str(e)}")
