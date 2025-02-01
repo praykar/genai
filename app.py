@@ -300,13 +300,13 @@ class AdGenerator:
 
         # Group words into lines
         if len(words) > 4:
-                # Split into two roughly equal parts
-                mid = len(words) // 2
-                line1 = ' '.join(words[:mid])
-                line2 = ' '.join(words[mid:])
-                lines = [line1, line2]
-            else:
-                lines = [tagline]
+            # Split into two roughly equal parts
+            mid = len(words) // 2
+            line1 = ' '.join(words[:mid])
+            line2 = ' '.join(words[mid:])
+            lines = [line1, line2]
+        else:
+            lines = [tagline]
                 
         # for word in words:
         #     current_line.append(word)
