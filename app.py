@@ -168,7 +168,7 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"A {prompt_product.split()[0]} positioned dominantly without any specifications in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}," \
+        prompt = f"A {prompt_product.split()[0]} positioned dominantly without specifications in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}," \
                 f"Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
 
         try:
@@ -276,7 +276,7 @@ class AdGenerator:
                             font=font,
                             fill=outline_color
                         )
-                
+                draw.rectangle(bbox, fill=(0, 0, 0, 128))
                 # Draw main text
                 draw.text(
                     (text_x, text_y),
@@ -306,17 +306,6 @@ class AdGenerator:
             lines = [line1, line2]
         else:
             lines = [tagline]
-                
-        # for word in words:
-        #     current_line.append(word)
-        #     test_line = ' '.join(current_line)
-        #     bbox = draw.textbbox((0, 0), test_line, font=font)
-        #     if bbox[2] - bbox[0] > image.width - (2 * margin_x):
-        #         current_line.pop()
-        #         lines.append(' '.join(current_line))
-        #         current_line = [word]
-        # if current_line:
-        #     lines.append(' '.join(current_line))
         
         # Calculate total text height
         total_text_height = len(lines) * line_spacing
@@ -371,7 +360,7 @@ class AdGenerator:
                         font=font,
                         fill=outline_color
                     )
-            
+            draw.rectangle(bbox, fill=(0, 0, 0, 128))
             # Draw main text
             draw.text(
                 (text_x, current_y),
