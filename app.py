@@ -266,7 +266,9 @@ class AdGenerator:
                 # Draw white outline for better visibility
                 outline_width = 1
                 outline_color = '#f26522'
-                
+                bg = draw.rectangle(bbox, fill=(0, 0, 0, 128))
+                # Paste translucent background
+                image.paste(bg, (text_x, text_y), bg)
                 # Draw outline
                 for offset_x in range(-outline_width, outline_width + 1):
                     for offset_y in range(-outline_width, outline_width + 1):
@@ -347,6 +349,10 @@ class AdGenerator:
             
             current_y = text_y + (i * line_spacing)
             
+            bg = draw.rectangle(bbox, fill=(0, 0, 0, 128))
+            # Paste translucent background
+            image.paste(bg, (text_x, current_y), bg)
+            
             # Draw text with outline effect
             outline_color = '#f26522'
             outline_width = 1
@@ -360,7 +366,7 @@ class AdGenerator:
                         font=font,
                         fill=outline_color
                     )
-            draw.rectangle(bbox, fill=(0, 0, 0, 128))
+            
             # Draw main text
             draw.text(
                 (text_x, current_y),
