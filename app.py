@@ -153,10 +153,12 @@ class AdGenerator:
         product_mapping = {
             'jewel': 'gold_jewellery',
             'jewel loan': 'gold_jewellery',
-            'personal': 'house loan',
-            'personal loan': 'house loan',
+            'personal': 'personal_loan_setup',
+            'personal loan': 'personal_loan_setup',
             'home': 'house loan',
-            'home loan': 'house loan'
+            'home loan': 'house loan',
+            'education loan': 'education_loan_setup',
+            'education': 'education_loan_setup'
         }
         
         # Convert to lowercase for case-insensitive matching
