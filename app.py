@@ -239,72 +239,52 @@ class AdGenerator:
             self._position_tagline_with_spacing(draw, image, tagline, font, best_face, font_size)
         else:
             # Fallback positioning when no faces are detected
-            self._position_tagline_fallback(draw, image, tagline, font, font_size)
-
-    def _position_tagline_fallback(self, draw, image, tagline, font, font_size):
-        """Position tagline when no faces are detected"""
-        # Split tagline into words for better line breaking
-        words = tagline.split()
-        lines = []
-        current_line = []
-        
-        # Calculate safe margins
-        margin_x = int(image.width * 0.05)  # 5% of image width
-        margin_y = int(image.height * 0.05)  # 5% of image height
-        line_spacing = int(font_size * 1.2)  # 120% of font size
-        
-        # Group words into lines
-        for word in words:
-            current_line.append(word)
-            test_line = ' '.join(current_line)
-            bbox = draw.textbbox((0, 0), test_line, font=font)
-            if bbox[2] - bbox[0] > image.width - (2 * margin_x):
-                current_line.pop()
-                lines.append(' '.join(current_line))
-                current_line = [word]
-        if current_line:
-            lines.append(' '.join(current_line))
-        
-        # Calculate total text height
-        total_text_height = len(lines) * line_spacing
-        
-        # Position text in lower third of image
-        text_y = int(image.height * 0.6)  # Position at 60% from top
-        
-        # Ensure text doesn't go beyond image bottom
-        if text_y + total_text_height > image.height - margin_y:
-            text_y = image.height - total_text_height - margin_y
-        
-        # Draw each line
-        for i, line in enumerate(lines):
-            bbox = draw.textbbox((0, 0), text=line, font=font)
-            text_width = bbox[2] - bbox[0]
+            # Split tagline if it's too long
+            words = tagline.split()
+            if len(words) > 4:
+                # Split into two roughly equal parts
+                mid = len(words) // 2
+                line1 = ' '.join(words[:mid])
+                line2 = ' '.join(words[mid:])
+                lines = [line1, line2]
+            else:
+                lines = [tagline]
             
-            # Center text horizontally
-            text_x = (image.width - text_width) // 2
-            current_y = text_y + (i * line_spacing)
+            # Calculate position
+            margin_top = int(image.height * 0.25)  # 15% from top
+            line_spacing = int(font_size * 1.5)  # 150% of font size for good spacing
             
-            # Draw text with outline effect
-            outline_color = '#f26522'
-            outline_width = 1
-            
-            # Draw outline
-            for offset_x in range(-outline_width, outline_width + 1):
-                for offset_y in range(-outline_width, outline_width + 1):
-                    draw.text(
-                        (text_x + offset_x, current_y + offset_y),
-                        line,
-                        font=font,
-                        fill=outline_color
-                    )
-            
-            # Draw main text
-            draw.text(
-                (text_x, current_y),
-                line,
-                fill='#f26522',  # Orange color
-                font=font
-            )
+            # Draw each line
+            for i, line in enumerate(lines):
+                # Get text dimensions
+                bbox = draw.textbbox((0, 0), line, font=font)
+                text_width = bbox[2] - bbox[0]
+                
+                # Center text horizontally
+                text_x = (image.width - text_width) // 2
+                text_y = margin_top + (i * line_spacing)
+                
+                # Draw white outline for better visibility
+                outline_width = 1
+                outline_color = '#f26522'
+                
+                # Draw outline
+                for offset_x in range(-outline_width, outline_width + 1):
+                    for offset_y in range(-outline_width, outline_width + 1):
+                        draw.text(
+                            (text_x + offset_x, text_y + offset_y),
+                            line,
+                            font=font,
+                            fill=outline_color
+                        )
+                
+                # Draw main text
+                draw.text(
+                    (text_x, text_y),
+                    line,
+                    fill='#f26522',  # Orange color
+                    font=font
+                )
 
     def _position_tagline_with_spacing(self, draw, image, tagline, font, face, font_size):
         """Position tagline avoiding face overlap"""
@@ -317,18 +297,27 @@ class AdGenerator:
         margin_x = int(image.width * 0.05)  # 5% of image width
         margin_y = int(image.height * 0.05)  # 5% of image height
         line_spacing = int(font_size * 1.2)  # 120% of font size
-        
+
         # Group words into lines
-        for word in words:
-            current_line.append(word)
-            test_line = ' '.join(current_line)
-            bbox = draw.textbbox((0, 0), test_line, font=font)
-            if bbox[2] - bbox[0] > image.width - (2 * margin_x):
-                current_line.pop()
-                lines.append(' '.join(current_line))
-                current_line = [word]
-        if current_line:
-            lines.append(' '.join(current_line))
+        if len(words) > 4:
+                # Split into two roughly equal parts
+                mid = len(words) // 2
+                line1 = ' '.join(words[:mid])
+                line2 = ' '.join(words[mid:])
+                lines = [line1, line2]
+            else:
+                lines = [tagline]
+                
+        # for word in words:
+        #     current_line.append(word)
+        #     test_line = ' '.join(current_line)
+        #     bbox = draw.textbbox((0, 0), test_line, font=font)
+        #     if bbox[2] - bbox[0] > image.width - (2 * margin_x):
+        #         current_line.pop()
+        #         lines.append(' '.join(current_line))
+        #         current_line = [word]
+        # if current_line:
+        #     lines.append(' '.join(current_line))
         
         # Calculate total text height
         total_text_height = len(lines) * line_spacing
