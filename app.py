@@ -237,7 +237,7 @@ class AdGenerator:
         if faces:
             best_face = max(faces, key=lambda f: f['width'] * f['height'])
             self._position_tagline_with_spacing(draw, image, tagline, font, best_face, font_size)
-         else:
+        else:
             # Fallback positioning when no faces are detected
             self._position_tagline_fallback(draw, image, tagline, font, font_size)
 
