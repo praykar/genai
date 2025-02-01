@@ -92,10 +92,26 @@ class AdGenerator:
         
         follow_text_bbox = draw.textbbox((0, 0), follow_text, font=follow_font)
         follow_text_width = follow_text_bbox[2] - follow_text_bbox[0]
-        
+        icon_paths = ["facebook.png", "twitter.png", "instagram.png", "linkedin.png", "youtube.png", "whatsapp.png"]
+        icons = []
+        for path in icon_paths:
+            if os.path.exists(path):
+                icon = Image.open(path)
+                if icon.mode != 'RGBA':
+                    icon = icon.convert('RGBA')
+                icons.append(icon)
+
         follow_text_x = int((width) - (follow_text_width * 2.8))
         follow_text_y = int(height * 0.55)
-        
+        icon_size = int(follow_font_size*1.2)
+        icons = [icon.resize((icon_size, icon_size)) for icon in icons]
+    
+        icon_x = follow_text_x + follow_text_width + 5
+        icon_y = follow_text_y + (follow_font_size - icon_size) // 2
+    
+        for icon in icons:
+            image.paste(icon, (int(icon_x), int(icon_y)), icon)
+            icon_x += icon.width + 10
         draw.text((follow_text_x, follow_text_y), follow_text, 
                  fill='white', font=follow_font, stroke_width=0.2, stroke_fill='white')
 
@@ -121,13 +137,16 @@ class AdGenerator:
         elif product.lower() == 'personal':
             product = 'vacation'
             
-        prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
-                f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
-                f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        
+        # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
+        #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
+        #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
+        prompt = f"A {product} with absolutely no text, logos, or branding, positioned dominantly in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}," \
+                f"India. Natural daylight bathes the scene in warm, golden tones with soft shadows, capturing a candid lifestyle moment. Clean mid-shot composition, cinematic framing," \
+                f"and hyper-realistic details emphasize the pristine, brand-free product alongside the person. No text or graphics appear anywhere in the image," \
+                f"ensuring a pure focus on the product’s design and the authentic human connection."
         try:
             image = client.text_to_image(prompt)
-            caption = " ".join(prompt.split()[:7])
+            caption = f"{product}: {age}-year {gender} {profession}, {location}" 
             return image, caption
         except Exception as e:
             raise Exception(f"Error generating image: {str(e)}")
@@ -182,7 +201,7 @@ class AdGenerator:
         faces = self.detect_faces(image)
         if faces:
             best_face = max(faces, key=lambda f: f['width'] * f['height'])
-            self._position_tagline(draw, image.width, tagline, font, best_face)
+                self._position_tagline(draw, image.width, tagline, font, best_face)
 
     def _position_tagline(self, draw, width, tagline, font, face):
         """Position tagline relative to detected face"""
@@ -199,15 +218,31 @@ class AdGenerator:
         if len(words) > 2:
             line1 = ' '.join(words[:len(words)//2])
             line2 = ' '.join(words[len(words)//2:])
-            
-            y1 = face['y'] + face['height'] // 2 - text_bbox[3] - 5
-            y2 = face['y'] + face['height'] // 2 + 5
-            
-            draw.text((text_x, y1), line1, fill='#f26522', font=font, stroke_width=1, stroke_fill='#f26522')
-            draw.text((text_x, y2), line2, fill='#f26522', font=font, stroke_width=1, stroke_fill='#f26522')
         else:
-            y = face['y'] + face['height'] // 2 - text_bbox[3] // 2
-            draw.text((text_x, y), tagline, fill='#f26522', font=font, stroke_width=1, stroke_fill='#f26522')
+            tagline_line1 = tagline
+            tagline_line2 = ""
+
+        # 2. Calculate text dimensions for each line
+        text_bbox1 = draw.textbbox((0, 0), tagline_line1, font=font)
+        text_width1 = text_bbox1[2] - text_bbox1[0]
+        text_height1 = text_bbox1[3] - text_bbox1[1]
+
+        text_bbox2 = draw.textbbox((0, 0), tagline_line2, font=font)
+        text_width2 = text_bbox2[2] - text_bbox2[0]
+
+        # 3. Choose side with more space
+        left_space = best_face['x'] - margin
+        right_space = img_width - (best_face['x'] + best_face['width']) - margin
+        text_x = margin if left_space > right_space else img_width - max(text_width1, text_width2) - margin
+
+        # 4. Calculate y-coordinates for each line
+        text_y1 = best_face['y'] + best_face['height'] // 2 - text_height1 - 5  # Above face, with spacing
+        text_y2 = best_face['y'] + best_face['height'] // 2 + 5  # Below face, with spacing
+
+        # 5. Draw text with outline
+        outline_color = '#f26522'
+        draw.text((text_x, text_y1), tagline_line1, fill='#f26522', font=font, stroke_width=1, stroke_fill=outline_color)
+        draw.text((text_x, text_y2), tagline_line2, fill='#f26522', font=font, stroke_width=1, stroke_fill=outline_color)
 
     def generate_advertisement(self, data, uploaded_logo, message_queue=None, index=None):
         """Generate a single advertisement"""
@@ -494,7 +529,7 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                                                 # Display image
                                                 with image_placeholders[idx]:
                                                     st.image(message.data['image'],
-                                                            caption=f"Image {idx + 1}",
+                                                            caption=message.data['caption'],
                                                             use_container_width=True)
                                                     
                                                     # Add download button
