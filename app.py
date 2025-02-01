@@ -146,10 +146,22 @@ class AdGenerator:
 
     def generate_base_image(self, product, age, location, gender, profession):
         """Generate base image using AI model"""
-        if product.lower() == 'jewel loan':
-            product = 'gold loan'
-        elif product.lower() == 'personal loan':
-            product = 'home loan'
+        # Standardize product naming
+        product = product.strip()  # Remove any whitespace
+        
+        # Map variations to standard names
+        product_mapping = {
+            'jewel': 'gold loan',
+            'jewel loan': 'gold loan',
+            'personal': 'home loan',
+            'personal loan': 'home loan',
+            'home': 'home loan',
+            'home loan': 'home loan'
+        }
+        
+        # Convert to lowercase for case-insensitive matching
+        product_key = product.lower()
+        prompt_product = product_mapping.get(product_key, product)
             
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
@@ -209,7 +221,12 @@ class AdGenerator:
     def _add_tagline(self, image, product, original_height):
         """Add tagline to the image"""
         draw = ImageDraw.Draw(image)
-        tagline = f"{random.choice(self.taglines[product])}"
+        # Standardize product name to match taglines dictionary keys
+        product_key = product.strip()  # Remove whitespace
+        if product_key not in self.taglines:
+            raise ValueError(f"No taglines found for product: {product_key}")
+            
+        tagline = random.choice(self.taglines[product_key])
         font = self.load_font("Helvetica.ttc", int(original_height * 0.05))
         
         faces = self.detect_faces(image)
