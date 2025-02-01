@@ -240,10 +240,6 @@ class AdGenerator:
         text_bbox = draw.textbbox((0, 0), tagline, font=font)
         text_width = text_bbox[2] - text_bbox[0]
         
-        left_space = face['x'] - margin
-        right_space = width - (face['x'] + face['width']) - margin
-        text_x = margin if left_space > right_space else width - text_width - margin
-        
         # Split tagline if needed
         words = tagline.split()
         if len(words) > 2:
