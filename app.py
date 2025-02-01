@@ -168,7 +168,7 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"With absolutely no text, logos, or branding, A {prompt_product.split()[0]} positioned dominantly in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}," \
+        prompt = f"With absolutely no text, Hidden logos, or branding, A {prompt_product.split()[0]} positioned dominantly in the foreground under crisp focus, adjacent to a {age}-year-old cheerful {gender} {profession} in {location}," \
                 f"India. Natural daylight bathes the scene in warm, golden tones with soft shadows, capturing a candid lifestyle moment. Clean mid-shot composition, cinematic framing," \
                 f"and hyper-realistic details emphasize the pristine, brand-free product alongside the person. No text or graphics appear anywhere in the image," \
                 f"ensuring a pure focus on the product’s design and the authentic human connection."
