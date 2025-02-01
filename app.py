@@ -234,7 +234,7 @@ class AdGenerator:
             best_face = max(faces, key=lambda f: f['width'] * f['height'])
             self._position_tagline(draw, image.width, tagline, font, best_face)
 
-    def _position_tagline(self, draw, width, tagline, font, face):
+    def _position_tagline(self, draw, width, tagline, font, best_face):
         """Position tagline relative to detected face"""
         margin = 40
         text_bbox = draw.textbbox((0, 0), tagline, font=font)
