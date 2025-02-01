@@ -39,18 +39,18 @@ class AdGenerator:
         #     "No hurdles, just hope—apply stress-free.", "Turn plans into action with a single yes.", "Empower progress. Own your path. We’ll fund it."
         # ]
         self.taglines = { 
-            "Home" : ["Turn keys to your dream home, stress-free.", "Build your forever, brick by brick.", "Your home, our promise—approved faster.",
+            "Home" : ["Turn keys to your dream home, stress free.", "Build your forever, brick by brick.", "Your home, our promise approved faster.",
                             "From foundations to rooftops, we finance it all.", "Unlock the door to your future today."],
-            "Personal" : ["Life’s surprises? We’ve got you covered.", "Your plans, our priority—funds in minutes.", "Flexible loans for life’s unpredictable chapters.",
+            "Personal" : ["Life’s surprises? We’ve got you covered.", "Your plans, our priority funds in minutes.", "Flexible loans for life’s unpredictable chapters.",
                                 "Need cash? Say goodbye to compromises.", "Dream bigger. Borrow smarter. Live freely."],
             "Jewel" : ["Unlock cash, keep your treasures safe.", "Your gold’s value, instantly in your hands.", "Secure loans, no parting with your heirlooms.",
-                             "Turn jewels into liquidity, effortlessly.", "Value preserved, funds accessed—zero stress."],
-            "Car" : ["Drive home your dream car, today.", "Fuel your journey, one affordable EMI at a time.", "New wheels, simpler deals—approved fast.",
+                             "Turn jewels into liquidity, effortlessly.", "Value preserved, funds accessed zero stress."],
+            "Car" : ["Drive home your dream car, today.", "Fuel your journey, one affordable EMI at a time.", "New wheels, simpler deals approved fast.",
                            "From commutes to adventures, we finance them all.", "Your road to ownership starts here."],
-            "Education" : ["Invest in tomorrow’s success, today.", "Your degree, our support—no boundaries.", "Learn fearlessly. We’ll handle the fees.",
+            "Education" : ["Invest in tomorrow’s success, today.", "Your degree, our support no boundaries.", "Learn fearlessly. We’ll handle the fees.",
                                  "Education unlocked, future secured.", "Bright minds deserve brighter opportunities."],
             "Credit Card" : ["Instant cash, just a swipe away.", "Turn credit into possibilities, effortlessly.", "Need liquidity? Your card’s got more power.",
-                                   "Flexible funds, zero collateral—just your limit.", "Unlock cash without emptying your wallet."]
+                                   "Flexible funds, zero collateral just your limit.", "Unlock cash without emptying your wallet."]
         }
 
     def load_font(self, font_path, font_size):
@@ -151,8 +151,8 @@ class AdGenerator:
         
         # Map variations to standard names
         product_mapping = {
-            'jewel': 'gold loan',
-            'jewel loan': 'gold loan',
+            'jewel': 'gold_jewellery',
+            'jewel loan': 'gold_jewellery',
             'personal': 'house loan',
             'personal loan': 'house loan',
             'home': 'house loan',
