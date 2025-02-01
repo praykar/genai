@@ -301,7 +301,7 @@ class AdGenerator:
             
             # Draw text with outline effect
             outline_color = '#f26522'
-            outline_width = 3
+            outline_width = 1
             
             # Draw outline
             for offset_x in range(-outline_width, outline_width + 1):
