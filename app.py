@@ -163,7 +163,7 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {prompt_product.split()[0]} (hidden logo) in foreground, sharp focus on {prompt_product.split()[0]}, beside person. \"
+        prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {prompt_product.split()[0]} (hidden logo) in foreground, sharp focus on {prompt_product.split()[0]}, beside person. "\
                 f"Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
 
         try:
