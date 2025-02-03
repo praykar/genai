@@ -583,9 +583,8 @@ def create_streamlit_ui():
                                 
                                 # Create UI elements for progress tracking
                                 progress_container = st.container()
-                                with progress_container.status("Generating advertisements...", expanded=True) as status:
-                                    progress_bar = st.progress(0)
-                                    status_text = st.empty()
+                                progress_bar = st.progress(0)
+                                status_text = st.empty()
                                 
                                 # Sample data for batch processing
                                 batch_data = df.sample(batch_size).reset_index(drop=True)
@@ -629,59 +628,60 @@ def create_streamlit_ui():
                                             data={'index': index, 'error': str(e)}
                                         ))
                                         return False
-                                
-                                with ThreadPoolExecutor(max_workers=num_workers) as executor:
-                                    futures = [
-                                        executor.submit(process_batch_row, idx, row)
-                                        for idx, row in batch_data.iterrows()
-                                    ]
-                                    
-                                    while completed < batch_size:
-                                        try:
-                                            message = message_queue.get(timeout=0.1)
-                                            
-                                            if message.type == MessageType.PROGRESS:
-                                                completed += 1
-                                                progress_bar.progress(completed / batch_size)
-                                                status_text.text(f"Generated {completed} of {batch_size} images")
+                                with progress_container.status("Generating advertisements...", expanded=True) as status:
+                                    with ThreadPoolExecutor(max_workers=num_workers) as executor:
+                                        
+                                        futures = [
+                                            executor.submit(process_batch_row, idx, row)
+                                            for idx, row in batch_data.iterrows()
+                                        ]
+                                        
+                                        while completed < batch_size:
+                                            try:
+                                                message = message_queue.get(timeout=0.1)
                                                 
-                                                # Store generated image
-                                                idx = message.data['index']
-                                                generated_images[idx] = (
-                                                    message.data['image'],
-                                                    message.data['caption']
-                                                )
-                                                
-                                                # Display image
-                                                with image_placeholders[idx]:
-                                                    st.image(message.data['image'],
-                                                            caption=message.data['caption'],
-                                                            use_container_width=True)
+                                                if message.type == MessageType.PROGRESS:
+                                                    completed += 1
+                                                    progress_bar.progress(completed / batch_size)
+                                                    status_text.text(f"Generated {completed} of {batch_size} images")
                                                     
-                                                    # Add download button
-                                                    buf = io.BytesIO()
-                                                    message.data['image'].save(buf, format="PNG")
-                                                    byte_im = buf.getvalue()
-                                                    
-                                                    st.download_button(
-                                                        label=f"Download Image {idx + 1}",
-                                                        data=byte_im,
-                                                        file_name=f"ad_batch_{idx + 1}.png",
-                                                        mime="image/png",
-                                                        use_container_width=True,
-                                                        key=f"download_{idx}"
+                                                    # Store generated image
+                                                    idx = message.data['index']
+                                                    generated_images[idx] = (
+                                                        message.data['image'],
+                                                        message.data['caption']
                                                     )
-                                            
-                                            elif message.type == MessageType.ERROR:
-                                                st.error(f"Error generating image {message.data['index'] + 1}: {message.data['error']}")
-                                                completed += 1
+                                                    
+                                                    # Display image
+                                                    with image_placeholders[idx]:
+                                                        st.image(message.data['image'],
+                                                                caption=message.data['caption'],
+                                                                use_container_width=True)
+                                                        
+                                                        # Add download button
+                                                        buf = io.BytesIO()
+                                                        message.data['image'].save(buf, format="PNG")
+                                                        byte_im = buf.getvalue()
+                                                        
+                                                        st.download_button(
+                                                            label=f"Download Image {idx + 1}",
+                                                            data=byte_im,
+                                                            file_name=f"ad_batch_{idx + 1}.png",
+                                                            mime="image/png",
+                                                            use_container_width=True,
+                                                            key=f"download_{idx}"
+                                                        )
                                                 
-                                        except queue.Empty:
-                                            continue
-                                    
-                                    # Wait for all futures to complete
-                                    for future in futures:
-                                        future.result()
+                                                elif message.type == MessageType.ERROR:
+                                                    st.error(f"Error generating image {message.data['index'] + 1}: {message.data['error']}")
+                                                    completed += 1
+                                                    
+                                            except queue.Empty:
+                                                continue
+                                        
+                                        # Wait for all futures to complete
+                                        for future in futures:
+                                            future.result()
                                 
                                 if completed == batch_size:
                                     st.success(f"Successfully generated all {batch_size} images!")
