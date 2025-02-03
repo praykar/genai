@@ -163,8 +163,8 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, facing {prompt_product.split()[0]} (hidden logo) in foreground with sharp focus. "\
-                f"Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
+        prompt = f"{prompt_product.split()[0]} foreground, sharp focus, facing {age} year happy {gender}, {profession}, {location}, India."\
+                f"Hide Logo on {prompt_product.split()[0]}, Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
 
         try:
             image = client.text_to_image(prompt)
