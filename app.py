@@ -163,7 +163,7 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"{prompt_product.split()[0]} position dominant foreground crisp focus, adjacent one {age}-year-old cheerful {gender}, {profession}, {location}, India. " \
+        prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {prompt_product.split()[0]} (hidden logo) in foreground, sharp focus on {prompt_product.split()[0]}, beside person. \"
                 f"Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
 
         try:
@@ -176,7 +176,7 @@ class AdGenerator:
 
     def detect_faces(self, image):
         """Detect faces in image using face_recognition"""
-        face_locations = face_recognition.face_locations(np.array(image), model="cnn")
+        face_locations = face_recognition.face_locations(np.array(image), model="hog")
         return [{'x': left, 'y': top, 'width': right - left, 'height': bottom - top} 
                 for top, right, bottom, left in face_locations]
 
