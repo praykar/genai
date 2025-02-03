@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont
+    from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 import face_recognition
 import numpy as np
@@ -612,6 +612,10 @@ def create_streamlit_ui():
                                 
                                 def process_batch_row(index, row):
                                     try:
+                                        # Add staggered delay based on index
+                                        initial_delay = 3  # Initial delay in seconds
+                                        delay = initial_delay * (index % num_workers)  # Stagger based on worker number
+                                        time.sleep(delay)
                                         final_image, caption = generator.generate_advertisement(
                                             row.to_dict(),
                                             uploaded_logo,
