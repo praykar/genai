@@ -245,7 +245,7 @@ class AdGenerator:
                 lines = [tagline]
 
             # Calculate position
-            margin_top = int(image.height * 0.25)  # 15% from top
+            margin_top = int(image.height * 0.75)  # 75% from top
             line_spacing = int(font_size * 1.5)  # 150% of font size for good spacing
 
             # Draw each line
