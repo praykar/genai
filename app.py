@@ -163,13 +163,13 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"{prompt_product.split()[0]}-non-branded position dominant foreground crisp focus, adjacent a {age}-year-old cheerful {gender}, {profession}, {location}, India. " \
+        prompt = f"A Non-branded {prompt_product.split()[0]} position dominant foreground crisp focus, adjacent a {age}-year-old cheerful {gender}, {profession}, {location}, India. " \
                 f"Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
 
         try:
             image = client.text_to_image(prompt)
             # caption = prompt
-            caption = f"{product} Ad: {age}-year {gender} {profession}, {location}" 
+            caption = f"{product} Loan Ad: {age}-year {gender} {profession}, {location}" 
             return image, caption
         except Exception as e:
             raise Exception(f"Error generating image: {str(e)}")
