@@ -144,8 +144,8 @@ class AdGenerator:
         
         # Map variations to standard names
         product_mapping = {
-            'jewel': 'gold_jewellery',
-            'jewel loan': 'gold_jewellery',
+            'jewel': 'single_gold_jewellery',
+            'jewel loan': 'single_gold_jewellery',
             'personal': 'personal_loan_ad',
             'personal loan': 'personal_loan_ad',
             'home': 'house loan',
