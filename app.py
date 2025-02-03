@@ -1,4 +1,4 @@
-    from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 import streamlit as st
 import face_recognition
 import numpy as np
