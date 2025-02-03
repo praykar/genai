@@ -152,8 +152,8 @@ class AdGenerator:
             'home loan': 'house loan',
             'education loan': 'education_loan_ad',
             'education': 'education_loan_ad',
-            'car': 'new_car_without_logo',
-            'car loan': 'new_car_without_logo'
+            'car': 'new_car',
+            'car loan': 'new_car'
         }
         
         # Convert to lowercase for case-insensitive matching
@@ -163,8 +163,8 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"{prompt_product.split()[0]} foreground, sharp focus, facing {age} year happy {gender}, {profession}, {location}, India."\
-                f"Hide Logo on {prompt_product.split()[0]}, Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
+        prompt = f"{prompt_product.split()[0]} foreground, Hide brand logo, sharp focus, facing {age} year happy {gender}, {profession}, {location}, India."\
+                f"Realistic lighting, natural daylight, warm tones, soft shadows. Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
 
         try:
             image = client.text_to_image(prompt)
