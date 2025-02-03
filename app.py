@@ -144,14 +144,14 @@ class AdGenerator:
         
         # Map variations to standard names
         product_mapping = {
-            'jewel': 'gold_jewel',
-            'jewel loan': 'gold_jewel',
-            'personal': 'personal_loan_setup',
-            'personal loan': 'personal_loan_setup',
+            'jewel': 'gold_jewellery',
+            'jewel loan': 'gold_jewellery',
+            'personal': 'personal_loan_ad',
+            'personal loan': 'personal_loan_ad',
             'home': 'house loan',
             'home loan': 'house loan',
-            'education loan': 'education_loan_setup',
-            'education': 'education_loan_setup',
+            'education loan': 'education_loan_ad',
+            'education': 'education_loan_ad',
             'car': 'new_car_without_logo',
             'car loan': 'new_car_without_logo'
         }
@@ -594,7 +594,6 @@ def create_streamlit_ui():
                                 num_cols = 2
                                 
                                 with grid_container:
-                                    st.markdown("### Generating Advertisements")
                                     num_rows = (batch_size + num_cols - 1) // num_cols
                                     image_placeholders = {}
                                     
