@@ -163,12 +163,11 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"A {prompt_product.split()[0]} dominates the crisp foreground under sharp focus, positioned adjacent to a cheerful {age}-year-old {gender} {profession} in a {location}. "\
-                f"Foreground: The {prompt_product.split()[0]} appears sleek and minimalist, rendered with photorealistic textures under natural daylight. "\
-                f"Middle ground: The {profession} smiles warmly, wearing attire appropriate for their role, interacting naturally with their surroundings. "\
-                f"Background: A lifestyle-relevant {location} (e.g., cozy café, modern office, sunlit park) with soft shadows and warm golden-hour tones. "\
-                f"Style: Cinematic mid-shot framing, clean composition, soft shadows enhancing depth, and realistic lighting that highlights the {prompt_product.split()[0]}'s form without logos or text."
-
+        prompt = f"A {prompt_product.split()[0]} occupies the left foreground under sharp, crisp focus, positioned side by side with a {age}-year-old cheerful {gender} {profession} in a {location}. "\
+                f"Foreground (Left): The {prompt_product.split()[0]} is minimalist and unbranded, rendered with realistic textures under natural daylight. "\
+                f"Middle Ground (Right): The {profession} stands naturally, slightly angled to face the viewer, smiling warmly while casually interacting with their environment (e.g., holding a tool, gesturing, or relaxed posture). "\
+                f"Background: A {location} scene (e.g., urban street, cozy home, workshop) with soft shadows, warm daylight tones, and subtle depth from cinematic framing. "\
+                f"Composition: Mid-shot perspective, clean lines, and balanced spacing between the product and person to avoid visual clutter. No text or branding."
         try:
             image = client.text_to_image(prompt)
             # caption = prompt
