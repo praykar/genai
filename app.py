@@ -176,7 +176,7 @@ class AdGenerator:
 
     def detect_faces(self, image):
         """Detect faces in image using face_recognition"""
-        face_locations = face_recognition.face_locations(np.array(image), model="hog")
+        face_locations = face_recognition.face_locations(np.array(image), model="cnn")
         return [{'x': left, 'y': top, 'width': right - left, 'height': bottom - top} 
                 for top, right, bottom, left in face_locations]
 
