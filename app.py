@@ -514,22 +514,23 @@ def create_streamlit_ui():
                     help="Upload a CSV file with columns: Product, age, gender, job, location"
                 )
                 
-                # CSV format info
-                st.subheader("CSV Format Guide")
-                st.markdown("""
-                Your CSV should have the following columns:
-                - Product: Type of financial product
-                - age: Age of target customer (18-100)
-                - gender: Male/Female
-                - job: Customer profession
-                - location: City name
-                """)
-                
-                st.markdown("**Sample Data:**")
-                st.code("""Product,age,gender,job,location
-Home Loan,35,Male,Software Engineer,Mumbai
-Personal Loan,28,Female,Doctor,Delhi
-Business Loan,45,Male,Entrepreneur,Bangalore""")
+                # Show sample format
+                with st.expander("View CSV Format"):
+                    st.markdown("""
+                    Your CSV should have the following columns:
+                    - Product: Type of financial product
+                    - age: Age of target customer (18-100)
+                    - gender: Male/Female
+                    - job: Customer profession
+                    - location: City name
+                    """)
+                    
+                    # Show sample data
+                    st.markdown("**Sample Data:**")
+                    st.code("""Product,age,gender,job,location
+        Home Loan,35,Male,Software Engineer,Mumbai
+        Personal Loan,28,Female,Doctor,Delhi
+        Business Loan,45,Male,Entrepreneur,Bangalore""")
             
             df = None
             if uploaded_file is not None:
@@ -537,12 +538,13 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                     df = pd.read_csv(uploaded_file)
                     with col2:
                         st.subheader("Data Preview")
-                        st.dataframe(df.head(3), use_container_width=True)
+                        st.dataframe(df[['Product', 'age', 'gender', 'job', 'location']].head(3), use_container_width=True)
                         
-                        st.subheader("Data Summary")
-                        st.write(f"Total Rows: {len(df)}")
-                        st.write("Product Distribution:")
-                        st.dataframe(df['Product'].value_counts().head(), use_container_width=True)
+                        # Show data statistics
+                        with st.expander("Data Summary"):
+                            st.write(f"Total Rows: {len(df)}")
+                            st.write("Product Distribution:")
+                            st.dataframe(df['Product'].value_counts().head(), use_container_width=True)
                 except Exception as e:
                     st.error(f"Error reading CSV file: {str(e)}")
             
@@ -557,8 +559,8 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                         num_workers = st.slider(
                             "Number of Parallel Workers",
                             min_value=1,
-                            max_value=min(8, len(df)),
-                            value=min(4, len(df)),
+                            max_value=min(2, len(df)),
+                            value=min(2, len(df)),
                             help="Adjust the number of parallel processes for image generation"
                         )
                     
@@ -566,8 +568,8 @@ Business Loan,45,Male,Entrepreneur,Bangalore""")
                         batch_size = st.number_input(
                             "Batch Size",
                             min_value=1,
-                            max_value=len(df),
-                            value=min(10, len(df)),
+                            max_value=min(5, len(df)),
+                            value=min(2, len(df)),
                             help="Number of images to generate in one batch"
                         )
                     
