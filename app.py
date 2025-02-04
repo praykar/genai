@@ -163,11 +163,19 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"A {prompt_product.split()[0]} occupies the left foreground under sharp, crisp focus, positioned side by side with a {age}-year-old cheerful {gender} {profession} in a {location}. "\
-                f"Foreground (Left): The {prompt_product.split()[0]} is minimalist and unbranded, rendered with realistic textures under natural daylight. "\
-                f"Middle Ground (Right): The {profession} stands naturally, slightly angled to face the viewer, smiling warmly while casually interacting with their environment (e.g., holding a tool, gesturing, or relaxed posture). "\
-                f"Background: A {location} scene (e.g., urban street, cozy home, workshop) with soft shadows, warm daylight tones, and subtle depth from cinematic framing. "\
-                f"Composition: Mid-shot perspective, clean lines, and balanced spacing between the product and person to avoid visual clutter. No text or branding."
+        prompt = f"A {product} occupies the left foreground under sharp focus, positioned side by side with a {age}-year-old cheerful {gender} {profession} in a {location}. "\
+                f"Product (Left): "\
+                f"Dimensions: The {product} fills 40% of the frame horizontally, its height aligned with the person’s shoulder level. "\
+                f"Appearance: Sleek, unbranded design with no visible logos or text or hood ornament. Surface details (e.g., matte finish, smooth curves) rendered realistically under natural daylight. "\
+                f"Camera Angle: Slightly elevated to emphasize form without revealing branding (e.g., car hood ornament hidden by perspective). "\
+                f"Person (Right): "\
+                f"Positioning: Stands 2 feet away from the product, angled toward the viewer, with relaxed posture and natural body language. "\
+                f"Height/Scale: Full-body mid-shot, height proportionate to the product (e.g., person’s waist aligns with the product’s midpoint). "\
+                f"Interaction: Engages naturally with their environment (e.g., hands resting casually, slight smile). "\
+                f"Background & Style: "\
+                f"Location: A {location} with soft shadows, warm daylight, and subtle depth (e.g., blurred foliage, architectural lines). "\
+                f"Lighting: Realistic natural light casting soft shadows to highlight depth without harsh contrasts. "\
+                f"Composition: Clean, cinematic framing with balanced negative space. No text or branding."
         try:
             image = client.text_to_image(prompt)
             # caption = prompt
