@@ -165,19 +165,19 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"A {prompt_product.split()[0]} occupies the left foreground under sharp focus, positioned side by side with a {age}-year-old cheerful {gender} {profession} in a {location}. "\
-                f"Product (Left): "\
-                f"Dimensions: The {prompt_product.split()[0]} fills 40% of the frame horizontally, its height aligned with the person’s shoulder level. "\
-                f"Appearance: Sleek, unbranded design with no visible logos or text. Surface details (e.g., matte finish, smooth curves) rendered realistically under natural daylight. "\
-                f"Camera Angle: Slightly elevated to emphasize form without revealing branding. "\
-                f"Person (Right): "\
-                f"Positioning: Stands 2 feet away from the product, angled toward the viewer, with relaxed posture and natural body language. "\
-                f"Height/Scale: Full-body mid-shot, height proportionate to the product (e.g., person’s waist aligns with the product’s midpoint). "\
-                f"Interaction: Engages naturally with their environment (e.g., hands resting casually, slight smile). "\
+        prompt = f"Product (Left): {prompt_product.split()[0]} occupies the left foreground under sharp focus"\
+                f"Dimensions: The {prompt_product.split()[0]} fills 40% of the frame horizontally. "\
+                f"Appearance: Unbranded, minimalist design with no logos, text, or identifiers. Realistic textures (e.g., matte metal, soft fabric) under natural daylight. "\
+                f"Camera Angle: Slightly elevated to avoid revealing branding. "\
+                f"Person (Right): a solitary {age}-year-old cheerful {gender} {profession} in a {location}"\
+                f"Positioning: Stands 2 feet away from the product, angled toward the viewer. No other people in the frame. "\
+                f"Height/Scale: Full-body mid-shot, height proportionate to the product (e.g., product’s height aligned with the person’s shoulder level). "\
+                f"Interaction: Engages naturally only with their environment (e.g., holding a tool, checking a device, or smiling at the viewer). "\
+                f"Body Language: Relaxed posture, hands visible and purposeful (e.g., resting on hips, holding an object). "\
                 f"Background & Style: "\
-                f"Location: A {location} with soft shadows, warm daylight, and subtle depth (e.g., blurred foliage, architectural lines). "\
-                f"Lighting: Realistic natural light casting soft shadows to highlight depth without harsh contrasts. "\
-                f"Composition: Clean, cinematic framing with balanced negative space. No text or branding."
+                f"Location: A {location} with no bystanders or crowds (e.g., quiet park, empty workshop, serene urban street). "\
+                f"Lighting: Soft natural daylight casting warm tones and subtle shadows. No distractions or competing elements. "\
+                f"Composition: Mid-shot framing with balanced negative space. No text, logos, or additional human figures."
         try:
             image = client.text_to_image(prompt)
             # caption = prompt
