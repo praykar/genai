@@ -625,7 +625,7 @@ def create_streamlit_ui():
                                 def process_batch_row(index, row):
                                     try:
                                         # Add staggered delay based on index
-                                        initial_delay = 30  # Initial delay in seconds
+                                        initial_delay = 45  # Initial delay in seconds
                                         delay = initial_delay * (index % num_workers)  # Stagger based on worker number
                                         time.sleep(delay)
                                         final_image, caption = generator.generate_advertisement(
