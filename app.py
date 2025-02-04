@@ -13,6 +13,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import Enum, auto
 from huggingface_hub import InferenceClient
+import zipfile
+from datetime import datetime
 
 # Initialize HuggingFace client
 KEY = os.getenv('HF_TOKEN')
@@ -163,10 +165,10 @@ class AdGenerator:
         # prompt = f"{age}-year-old happy {gender} {profession}, {location}, India, {product} (hidden logo) in foreground, " \
         #         f"sharp focus, beside person. Realistic lighting, natural daylight, warm tones, soft shadows. " \
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
-        prompt = f"A {product} occupies the left foreground under sharp focus, positioned side by side with a {age}-year-old cheerful {gender} {profession} in a {location}. "\
+        prompt = f"A {prompt_product.split()[0]} occupies the left foreground under sharp focus, positioned side by side with a {age}-year-old cheerful {gender} {profession} in a {location}. "\
                 f"Product (Left): "\
-                f"Dimensions: The {product} fills 40% of the frame horizontally, its height aligned with the person’s shoulder level. "\
-                f"Appearance: Sleek, unbranded design with no visible logos or text or hood ornament. Surface details (e.g., matte finish, smooth curves) rendered realistically under natural daylight. "\
+                f"Dimensions: The {prompt_product.split()[0]} fills 40% of the frame horizontally, its height aligned with the person’s shoulder level. "\
+                f"Appearance: Sleek, unbranded design with no visible logos or text. Surface details (e.g., matte finish, smooth curves) rendered realistically under natural daylight. "\
                 f"Camera Angle: Slightly elevated to emphasize form without revealing branding (e.g., car hood ornament hidden by perspective). "\
                 f"Person (Right): "\
                 f"Positioning: Stands 2 feet away from the product, angled toward the viewer, with relaxed posture and natural body language. "\
