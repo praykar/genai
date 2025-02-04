@@ -156,6 +156,8 @@ class AdGenerator:
             'education': 'education_loan',
             'car': 'new_car_hood_ornament_hidden_by_perspective',
             'car loan': 'new_car_hood_ornament_hidden_by_perspective'
+            'credit card': 'shopping_card'
+            'credit card loan': 'shopping_card'
         }
         
         # Convert to lowercase for case-insensitive matching
