@@ -538,6 +538,8 @@ def create_streamlit_ui():
             if uploaded_file is not None:
                 try:
                     df = pd.read_csv(uploaded_file)
+                    #filter out the age between 17 & 58
+                    df  = df[df['age'].between(17,58)]
                     with col2:
                         st.subheader("Data Preview")
                         st.dataframe(df[['Product', 'age', 'gender', 'job', 'location']].head(3), use_container_width=True)
@@ -613,7 +615,7 @@ def create_streamlit_ui():
                                 def process_batch_row(index, row):
                                     try:
                                         # Add staggered delay based on index
-                                        initial_delay = 3  # Initial delay in seconds
+                                        initial_delay = 30  # Initial delay in seconds
                                         delay = initial_delay * (index % num_workers)  # Stagger based on worker number
                                         time.sleep(delay)
                                         final_image, caption = generator.generate_advertisement(
