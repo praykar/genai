@@ -660,20 +660,6 @@ def create_streamlit_ui():
                                                         st.image(message.data['image'],
                                                                 caption=message.data['caption'],
                                                                 use_container_width=True)
-                                                        
-                                                        # Add download button
-                                                        buf = io.BytesIO()
-                                                        message.data['image'].save(buf, format="PNG")
-                                                        byte_im = buf.getvalue()
-                                                        
-                                                        st.download_button(
-                                                            label=f"Download Image {idx + 1}",
-                                                            data=byte_im,
-                                                            file_name=f"ad_batch_{idx + 1}.png",
-                                                            mime="image/png",
-                                                            use_container_width=True,
-                                                            key=f"download_{idx}"
-                                                        )
                                                 
                                                 elif message.type == MessageType.ERROR:
                                                     st.error(f"Error generating image {message.data['index'] + 1}: {message.data['error']}")
@@ -685,7 +671,26 @@ def create_streamlit_ui():
                                         # Wait for all futures to complete
                                         for future in futures:
                                             future.result()
-                                
+                                # Create zip file after all images are generated
+                                if completed > 0 and len(generated_images) > 0:
+                                    zip_buffer = io.BytesIO()
+                                    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                                        for idx, (image, caption) in generated_images.items():
+                                            img_buffer = io.BytesIO()
+                                            image.save(img_buffer, format="PNG")
+                                            zip_file.writestr(f"ad_batch_{idx + 1}.png", img_buffer.getvalue())
+                                    
+                                    # Add timestamp to zip file name
+                                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                                    st.download_button(
+                                        label="Download All Images as ZIP",
+                                        data=zip_buffer.getvalue(),
+                                        file_name=f"advertisements_{timestamp}.zip",
+                                        mime="application/zip",
+                                        use_container_width=True,
+                                        key="download_all"
+                                    )
+                                    
                                 if completed == batch_size:
                                     st.success(f"Successfully generated all {batch_size} images!")
                                 else:
