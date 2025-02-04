@@ -148,14 +148,14 @@ class AdGenerator:
         product_mapping = {
             'jewel': 'single_gold_jewellery',
             'jewel loan': 'single_gold_jewellery',
-            'personal': 'personal_loan_ad',
-            'personal loan': 'personal_loan_ad',
+            'personal': 'shopping',
+            'personal loan': 'shopping_loan',
             'home': 'house loan',
             'home loan': 'house loan',
-            'education loan': 'education_loan_ad',
-            'education': 'education_loan_ad',
-            'car': 'new_car',
-            'car loan': 'new_car'
+            'education loan': 'education_loan',
+            'education': 'education_loan',
+            'car': 'new_car_hood_ornament_hidden_by_perspective',
+            'car loan': 'new_car_hood_ornament_hidden_by_perspective'
         }
         
         # Convert to lowercase for case-insensitive matching
@@ -169,7 +169,7 @@ class AdGenerator:
                 f"Product (Left): "\
                 f"Dimensions: The {prompt_product.split()[0]} fills 40% of the frame horizontally, its height aligned with the person’s shoulder level. "\
                 f"Appearance: Sleek, unbranded design with no visible logos or text. Surface details (e.g., matte finish, smooth curves) rendered realistically under natural daylight. "\
-                f"Camera Angle: Slightly elevated to emphasize form without revealing branding (e.g., car hood ornament hidden by perspective). "\
+                f"Camera Angle: Slightly elevated to emphasize form without revealing branding. "\
                 f"Person (Right): "\
                 f"Positioning: Stands 2 feet away from the product, angled toward the viewer, with relaxed posture and natural body language. "\
                 f"Height/Scale: Full-body mid-shot, height proportionate to the product (e.g., person’s waist aligns with the product’s midpoint). "\
