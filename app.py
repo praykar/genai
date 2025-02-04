@@ -169,15 +169,15 @@ class AdGenerator:
         #         f"Lifestyle setting, no text, mid-shot, clean composition, cinematic framing."
         prompt = f"Product (Left): {prompt_product.split()[0]} occupies the left foreground under sharp focus"\
                 f"Dimensions: The {prompt_product.split()[0]} fills 40% of the frame horizontally. "\
-                f"Appearance: Unbranded, minimalist design with no logos, text, or identifiers. Realistic textures (e.g., matte metal, soft fabric) under natural daylight. "\
+                f"Appearance: Unbranded, minimalist design with no logos, text, or identifiers. Realistic textures under natural daylight. "\
                 f"Camera Angle: Slightly elevated to avoid revealing branding. "\
                 f"Person (Right): a solitary {age}-year-old cheerful {gender} {profession} in a {location}"\
                 f"Positioning: Stands 2 feet away from the product, angled toward the viewer. No other people in the frame. "\
-                f"Height/Scale: Full-body mid-shot, height proportionate to the product (e.g., product’s height aligned with the person’s shoulder level). "\
-                f"Interaction: Engages naturally only with their environment (e.g., holding a tool, checking a device, or smiling at the viewer). "\
-                f"Body Language: Relaxed posture, hands visible and purposeful (e.g., resting on hips, holding an object). "\
+                f"Height/Scale: Full-body mid-shot, height proportionate to the product. "\
+                f"Interaction: Engages naturally only with their environment. "\
+                f"Body Language: Relaxed posture, hands visible and purposeful. "\
                 f"Background & Style: "\
-                f"Location: A {location} with no bystanders or crowds (e.g., quiet park, empty workshop, serene urban street). "\
+                f"Location: A {location} with no bystanders or crowds. "\
                 f"Lighting: Soft natural daylight casting warm tones and subtle shadows. No distractions or competing elements. "\
                 f"Composition: Mid-shot framing with balanced negative space. No text, logos, or additional human figures."
         try:
