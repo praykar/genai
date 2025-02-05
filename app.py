@@ -150,8 +150,8 @@ class AdGenerator:
             'jewel loan': 'gold_jewellery',
             'personal': 'shopping_setup',
             'personal loan': 'shopping_setup',
-            'home': 'house',
-            'home loan': 'house',
+            'home': 'beautiful_house_with_garden',
+            'home loan': 'beautiful_house_with_garden',
             'education loan': 'education_loan',
             'education': 'education_loan',
             'car': 'new_car_hood_hidden_by_perspective',
@@ -627,7 +627,7 @@ def create_streamlit_ui():
                                 def process_batch_row(index, row):
                                     try:
                                         # Add staggered delay based on index
-                                        initial_delay = 45  # Initial delay in seconds
+                                        initial_delay = 35  # Initial delay in seconds
                                         delay = initial_delay * (index % num_workers)  # Stagger based on worker number
                                         time.sleep(delay)
                                         final_image, caption = generator.generate_advertisement(
