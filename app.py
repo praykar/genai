@@ -146,16 +146,16 @@ class AdGenerator:
         
         # Map variations to standard names
         product_mapping = {
-            'jewel': 'single_gold_jewellery',
-            'jewel loan': 'single_gold_jewellery',
-            'personal': 'shopping',
-            'personal loan': 'shopping_loan',
-            'home': 'house loan',
-            'home loan': 'house loan',
+            'jewel': 'gold_jewellery',
+            'jewel loan': 'gold_jewellery',
+            'personal': 'shopping_setup',
+            'personal loan': 'shopping_setup',
+            'home': 'house',
+            'home loan': 'house',
             'education loan': 'education_loan',
             'education': 'education_loan',
-            'car': 'new_car_hood_ornament_hidden_by_perspective',
-            'car loan': 'new_car_hood_ornament_hidden_by_perspective',
+            'car': 'new_car_hood_hidden_by_perspective',
+            'car loan': 'new_car_hood_hidden_by_perspective',
             'credit card': 'shopping_card',
             'credit card loan': 'shopping_card'
         }
